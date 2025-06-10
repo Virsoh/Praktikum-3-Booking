@@ -322,3 +322,21 @@ void TravelAgency::editBooking(const QString &id)
 
     qDebug() << "Keine Buchung mit ID" << id << "gefunden.";
 }
+
+Customer *TravelAgency::findCustomerById(const QString &id) const
+{
+    for (Customer *c : allCustomers) {
+        if (c->getId() == id)
+            return c;
+    }
+    return nullptr;
+}
+
+Travel *TravelAgency::findTravelById(const QString &id) const
+{
+    for (Travel *t : allTravels) {
+        if (t->getId() == id)
+            return t;
+    }
+    return nullptr;
+}
