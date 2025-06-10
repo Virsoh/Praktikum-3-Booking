@@ -20,7 +20,6 @@ set(PROJECT_SOURCES
   trainticket.h trainticket.cpp
   travelagency.h travelagency.cpp
   json.hpp
-  json.hpp
   travelagencyui.h travelagencyui.cpp
   main.cpp
   travelagencyui.ui
