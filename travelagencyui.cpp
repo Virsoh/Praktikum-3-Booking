@@ -6,9 +6,14 @@
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QIcon>
 #include <QTableWidgetItem>
 #include "bookingdialog.h"
 #include "customer.h"
+#include "flightbooking.h"
+#include "hotelbooking.h"
+#include "rentalcarreservation.h"
+#include "trainticket.h"
 #include "travel.h"
 #include "ui_travelagencyui.h"
 
@@ -18,6 +23,8 @@ TravelAgencyUI::TravelAgencyUI(TravelAgency *agency, QWidget *parent)
     , agency(agency)
 {
     ui->setupUi(this);
+    setupUI();
+    setupMenuAndToolbar();
 
     connect(ui->actionDateiOeffnen,
             &QAction::triggered,
@@ -27,6 +34,16 @@ TravelAgencyUI::TravelAgencyUI(TravelAgency *agency, QWidget *parent)
             &QAction::triggered,
             this,
             &TravelAgencyUI::on_actionEintragssucheClicked);
+
+    connect(ui->reiseTable,
+            &QTableWidget::itemDoubleClicked,
+            this,
+            &TravelAgencyUI::onTravelTableDoubleClicked);
+
+    connect(ui->customerTable,
+            &QTableWidget::itemDoubleClicked,
+            this,
+            &TravelAgencyUI::onCustomerTableDoubleClicked);
 }
 
 TravelAgencyUI::~TravelAgencyUI()
@@ -121,4 +138,122 @@ void TravelAgencyUI::zeigeReisenDesKunden(Customer *kunde)
     }
 
     ui->reiseTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+}
+
+void TravelAgencyUI::zeigeBuchungenZurReise(Travel *reise)
+{
+    if (!reise || !ui->customerTable)
+        return;
+
+    ui->customerTable->clear();
+    ui->customerTable->setRowCount(0);
+    ui->customerTable->setColumnCount(4);
+    ui->customerTable->setHorizontalHeaderLabels({"", "Start", "Ende", "Preis"});
+
+    const auto &buchungen = reise->getTravelBookings();
+    for (Booking *b : buchungen) {
+        int row = ui->customerTable->rowCount();
+        ui->customerTable->insertRow(row);
+
+        QIcon icon;
+        if (dynamic_cast<FlightBooking *>(b))
+            icon = QIcon::fromTheme("airplane");
+        else if (dynamic_cast<HotelBooking *>(b))
+            icon = QIcon::fromTheme("hotel");
+        else if (dynamic_cast<RentalCarReservation *>(b))
+            icon = QIcon::fromTheme("car");
+        else if (dynamic_cast<TrainTicket *>(b))
+            icon = QIcon::fromTheme("train");
+
+        QTableWidgetItem *iconItem = new QTableWidgetItem;
+        iconItem->setIcon(icon);
+        iconItem->setData(Qt::UserRole, QVariant::fromValue(quintptr(b)));
+        ui->customerTable->setItem(row, 0, iconItem);
+        ui->customerTable->setItem(
+            row, 1, new QTableWidgetItem(b->getFromDate().toString("dd.MM.yyyy")));
+        ui->customerTable->setItem(
+            row, 2, new QTableWidgetItem(b->getToDate().toString("dd.MM.yyyy")));
+        ui->customerTable->setItem(
+            row,
+            3,
+            new QTableWidgetItem(QString::number(b->getPrice(), 'f', 2)));
+    }
+
+    ui->customerTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+}
+
+void TravelAgencyUI::onCustomerTableDoubleClicked(QTableWidgetItem *item)
+{
+    if (!item)
+        return;
+
+    int row = item->row();
+    QTableWidgetItem *idItem = ui->customerTable->item(row, 0);
+    if (!idItem)
+        return;
+
+    Booking *booking = reinterpret_cast<Booking *>(
+        idItem->data(Qt::UserRole).value<quintptr>());
+    if (!booking)
+        return;
+
+    BookingDetailDialog dlg(this);
+    dlg.setBooking(booking);
+    dlg.exec();
+}
+
+void TravelAgencyUI::onTravelTableDoubleClicked(QTableWidgetItem *item)
+{
+    if (!item)
+        return;
+
+    int row = item->row();
+    QString travelId = ui->reiseTable->item(row, 0)->text();
+    Travel *travel = agency->findTravelById(travelId);
+    if (!travel)
+        return;
+
+    zeigeBuchungenZurReise(travel);
+}
+
+void TravelAgencyUI::setupUI()
+{
+    // ensure tables have no edit triggers by default
+    if (ui->customerTable)
+        ui->customerTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    if (ui->reiseTable)
+        ui->reiseTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+}
+
+void TravelAgencyUI::setupMenuAndToolbar()
+{
+    // placeholder: no additional setup needed
+}
+
+void TravelAgencyUI::clearTables()
+{
+    if (ui->customerTable)
+        ui->customerTable->clearContents();
+    if (ui->reiseTable)
+        ui->reiseTable->clearContents();
+}
+
+void TravelAgencyUI::showCustomerInfo(Customer *customer)
+{
+    if (!customer)
+        return;
+    ui->lineEditCustomerId->setText(customer->getId());
+    ui->lineEditFirstName->setText(customer->getFirstName());
+    ui->lineEditLastName->setText(customer->getLastName());
+}
+
+void TravelAgencyUI::showTravelDetails(Travel *travel)
+{
+    if (!travel)
+        return;
+    // currently only showing first booking in dialog
+    BookingDetailDialog dlg(this);
+    if (!travel->getTravelBookings().empty())
+        dlg.setBooking(travel->getTravelBookings().front());
+    dlg.exec();
 }

@@ -53,10 +53,15 @@ void TravelAgency::readFile(const std::string &filename)
         try {
             if (!entry.contains("id") || !entry.contains("price") || !entry.contains("fromDate")
                 || !entry.contains("toDate") || !entry.contains("type")
-                || !entry.contains("customerId") || !entry.contains("travelId")
-                || !entry.contains("firstName") || !entry.contains("lastName")) {
+                || !entry.contains("customerId") || !entry.contains("travelId")) {
                 throw std::runtime_error("Fehlende Pflichtfelder.");
             }
+
+            // Namen können in den Dateien unterschiedlich bezeichnet sein
+            if (!entry.contains("firstName") && !entry.contains("customerFirstname"))
+                throw std::runtime_error("Fehlender Vorname.");
+            if (!entry.contains("lastName") && !entry.contains("customerLastname"))
+                throw std::runtime_error("Fehlender Nachname.");
 
             QString bookingId = QString::fromStdString(entry["id"]);
             if (seenBookingIds.find(bookingId) != seenBookingIds.end()) {
@@ -70,10 +75,29 @@ void TravelAgency::readFile(const std::string &filename)
             QDate toDate = QDate::fromString(QString::fromStdString(entry["toDate"]), "yyyyMMdd");
             QString type = QString::fromStdString(entry["type"]);
 
-            QString travelId = QString::fromStdString(entry["travelId"]);
-            QString customerId = QString::fromStdString(entry["customerId"]);
-            QString firstName = QString::fromStdString(entry["firstName"]);
-            QString lastName = QString::fromStdString(entry["lastName"]);
+            QString travelId;
+            if (entry["travelId"].is_string())
+                travelId = QString::fromStdString(entry["travelId"]);
+            else
+                travelId = QString::number(entry["travelId"].get<int>());
+
+            QString customerId;
+            if (entry["customerId"].is_string())
+                customerId = QString::fromStdString(entry["customerId"]);
+            else
+                customerId = QString::number(entry["customerId"].get<int>());
+
+            QString firstName;
+            if (entry.contains("firstName"))
+                firstName = QString::fromStdString(entry["firstName"]);
+            else
+                firstName = QString::fromStdString(entry["customerFirstname"]);
+
+            QString lastName;
+            if (entry.contains("lastName"))
+                lastName = QString::fromStdString(entry["lastName"]);
+            else
+                lastName = QString::fromStdString(entry["customerLastname"]);
 
             // Kunde suchen oder anlegen
             Customer *customer = nullptr;
@@ -133,9 +157,13 @@ void TravelAgency::readFile(const std::string &filename)
                 QString pickup = QString::fromStdString(entry["pickupLocation"]);
                 QString retLoc = QString::fromStdString(entry["returnLocation"]);
                 QString company = QString::fromStdString(entry["company"]);
-                QString carType = entry.contains("carType")
-                                      ? QString::fromStdString(entry["carType"])
-                                      : "Standard";
+                QString carType;
+                if (entry.contains("carType"))
+                    carType = QString::fromStdString(entry["carType"]);
+                else if (entry.contains("vehicleClass"))
+                    carType = QString::fromStdString(entry["vehicleClass"]);
+                else
+                    carType = "Standard";
                 booking = new RentalCarReservation(bookingId,
                                                    price,
                                                    fromDate,
@@ -150,10 +178,23 @@ void TravelAgency::readFile(const std::string &filename)
                 QString toStation = QString::fromStdString(entry["toStation"]);
                 QString depTime = QString::fromStdString(entry["departureTime"]);
                 QString arrTime = QString::fromStdString(entry["arrivalTime"]);
-                QString bookingClass = QString::fromStdString(entry["bookingClass"]);
+                QString bookingClass;
+                if (entry.contains("bookingClass"))
+                    bookingClass = QString::fromStdString(entry["bookingClass"]);
+                else if (entry.contains("ticketType"))
+                    bookingClass = QString::fromStdString(entry["ticketType"]);
+                else
+                    bookingClass = "";
+
                 QVector<QString> stops;
-                for (const auto &s : entry["stops"]) {
-                    stops.append(QString::fromStdString(s));
+                if (entry.contains("stops")) {
+                    for (const auto &s : entry["stops"]) {
+                        stops.append(QString::fromStdString(s));
+                    }
+                } else if (entry.contains("connectingStations")) {
+                    for (const auto &s : entry["connectingStations"]) {
+                        stops.append(QString::fromStdString(s));
+                    }
                 }
                 booking = new TrainTicket(bookingId,
                                           price,
@@ -321,4 +362,22 @@ void TravelAgency::editBooking(const QString &id)
     }
 
     qDebug() << "Keine Buchung mit ID" << id << "gefunden.";
+}
+
+Customer *TravelAgency::findCustomerById(const QString &id) const
+{
+    for (Customer *c : allCustomers) {
+        if (c->getId() == id)
+            return c;
+    }
+    return nullptr;
+}
+
+Travel *TravelAgency::findTravelById(const QString &id) const
+{
+    for (Travel *t : allTravels) {
+        if (t->getId() == id)
+            return t;
+    }
+    return nullptr;
 }
