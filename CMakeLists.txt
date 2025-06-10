@@ -30,7 +30,6 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(Praktikum2
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        bookingdialog.ui
         bookingdialog.h bookingdialog.cpp
         resources.qrc
         customer.h customer.cpp
