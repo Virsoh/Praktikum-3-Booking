@@ -217,12 +217,6 @@ void TravelAgencyUI::onTravelTableDoubleClicked(QTableWidgetItem *item)
 
     zeigeBuchungenZurReise(travel);
 
-    BookingDetailDialog dlg(this);
-    if (!travel->getTravelBookings().empty()) {
-        dlg.setBooking(travel->getTravelBookings().front());
-    }
-    dlg.exec();
-
 }
 
 void TravelAgencyUI::setupUI()
