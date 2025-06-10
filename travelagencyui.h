@@ -38,6 +38,7 @@ public:
     ~TravelAgencyUI();
     bool showCustomerIdDialog(QString &idOut);
     void zeigeReisenDesKunden(Customer *kunde);
+    void zeigeBuchungenZurReise(Travel *reise);
 
 private:
     Ui::TravelAgencyUI *ui;
