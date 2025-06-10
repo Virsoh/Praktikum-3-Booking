@@ -18,6 +18,8 @@ TravelAgencyUI::TravelAgencyUI(TravelAgency *agency, QWidget *parent)
     , agency(agency)
 {
     ui->setupUi(this);
+    setupUI();
+    setupMenuAndToolbar();
 
     connect(ui->actionDateiOeffnen,
             &QAction::triggered,
@@ -121,4 +123,68 @@ void TravelAgencyUI::zeigeReisenDesKunden(Customer *kunde)
     }
 
     ui->reiseTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+}
+
+void TravelAgencyUI::onCustomerTableDoubleClicked(QTableWidgetItem *)
+{
+    // Placeholder for future implementation
+}
+
+void TravelAgencyUI::onTravelTableDoubleClicked(QTableWidgetItem *item)
+{
+    if (!item)
+        return;
+
+    QString travelId = item->text();
+    Travel *travel = agency->findTravelById(travelId);
+    if (!travel)
+        return;
+
+    BookingDetailDialog dlg(this);
+    if (!travel->getTravelBookings().empty()) {
+        dlg.setBooking(travel->getTravelBookings().front());
+    }
+    dlg.exec();
+}
+
+void TravelAgencyUI::setupUI()
+{
+    // ensure tables have no edit triggers by default
+    if (ui->customerTable)
+        ui->customerTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    if (ui->reiseTable)
+        ui->reiseTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+}
+
+void TravelAgencyUI::setupMenuAndToolbar()
+{
+    // placeholder: no additional setup needed
+}
+
+void TravelAgencyUI::clearTables()
+{
+    if (ui->customerTable)
+        ui->customerTable->clearContents();
+    if (ui->reiseTable)
+        ui->reiseTable->clearContents();
+}
+
+void TravelAgencyUI::showCustomerInfo(Customer *customer)
+{
+    if (!customer)
+        return;
+    ui->lineEditCustomerId->setText(customer->getId());
+    ui->lineEditFirstName->setText(customer->getFirstName());
+    ui->lineEditLastName->setText(customer->getLastName());
+}
+
+void TravelAgencyUI::showTravelDetails(Travel *travel)
+{
+    if (!travel)
+        return;
+    // currently only showing first booking in dialog
+    BookingDetailDialog dlg(this);
+    if (!travel->getTravelBookings().empty())
+        dlg.setBooking(travel->getTravelBookings().front());
+    dlg.exec();
 }

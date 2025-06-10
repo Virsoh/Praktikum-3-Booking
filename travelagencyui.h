@@ -64,7 +64,7 @@ private:
 
 private slots:
     void on_actionDateiOeffnenClicked();
-    void onSearchCustomerClicked();
+    void on_actionEintragssucheClicked();
     void onCustomerTableDoubleClicked(QTableWidgetItem *item);
     void onTravelTableDoubleClicked(QTableWidgetItem *item);
 };
