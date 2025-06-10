@@ -25,6 +25,8 @@ public:
     void printStatistics() const;
     void reset();
     void editBooking(const QString &id);
+    Customer *findCustomerById(const QString &id) const;
+    Travel *findTravelById(const QString &id) const;
     const std::vector<Booking *> &getBookings() const;
     QVector<Travel *> getAllTravels() const { return allTravels; };
     QVector<Customer *> getAllCustomers() const { return allCustomers; };

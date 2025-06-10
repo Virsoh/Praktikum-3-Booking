@@ -38,6 +38,7 @@ public:
     ~TravelAgencyUI();
     bool showCustomerIdDialog(QString &idOut);
     void zeigeReisenDesKunden(Customer *kunde);
+    void zeigeBuchungenZurReise(Travel *reise);
 
 private:
     Ui::TravelAgencyUI *ui;
@@ -64,7 +65,7 @@ private:
 
 private slots:
     void on_actionDateiOeffnenClicked();
-    void onSearchCustomerClicked();
+    void on_actionEintragssucheClicked();
     void onCustomerTableDoubleClicked(QTableWidgetItem *item);
     void onTravelTableDoubleClicked(QTableWidgetItem *item);
 };
