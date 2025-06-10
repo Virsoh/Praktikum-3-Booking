@@ -140,6 +140,7 @@ void TravelAgencyUI::zeigeReisenDesKunden(Customer *kunde)
     ui->reiseTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
 }
 
+
 void TravelAgencyUI::zeigeBuchungenZurReise(Travel *reise)
 {
     if (!reise || !ui->customerTable)
@@ -200,20 +201,35 @@ void TravelAgencyUI::onCustomerTableDoubleClicked(QTableWidgetItem *item)
     BookingDetailDialog dlg(this);
     dlg.setBooking(booking);
     dlg.exec();
+=======
+void TravelAgencyUI::onCustomerTableDoubleClicked(QTableWidgetItem *)
+{
+    // Placeholder for future implementation
+
 }
 
 void TravelAgencyUI::onTravelTableDoubleClicked(QTableWidgetItem *item)
 {
     if (!item)
         return;
-
     int row = item->row();
     QString travelId = ui->reiseTable->item(row, 0)->text();
+
+    QString travelId = item->text();
+
     Travel *travel = agency->findTravelById(travelId);
     if (!travel)
         return;
 
+
     zeigeBuchungenZurReise(travel);
+
+    BookingDetailDialog dlg(this);
+    if (!travel->getTravelBookings().empty()) {
+        dlg.setBooking(travel->getTravelBookings().front());
+    }
+    dlg.exec();
+
 }
 
 void TravelAgencyUI::setupUI()
