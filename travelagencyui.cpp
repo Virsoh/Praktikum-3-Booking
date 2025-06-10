@@ -201,13 +201,7 @@ void TravelAgencyUI::onCustomerTableDoubleClicked(QTableWidgetItem *item)
     BookingDetailDialog dlg(this);
     dlg.setBooking(booking);
     dlg.exec();
-=======
-void TravelAgencyUI::onCustomerTableDoubleClicked(QTableWidgetItem *)
-{
-    // Placeholder for future implementation
-
 }
-
 void TravelAgencyUI::onTravelTableDoubleClicked(QTableWidgetItem *item)
 {
     if (!item)
@@ -215,7 +209,6 @@ void TravelAgencyUI::onTravelTableDoubleClicked(QTableWidgetItem *item)
     int row = item->row();
     QString travelId = ui->reiseTable->item(row, 0)->text();
 
-    QString travelId = item->text();
 
     Travel *travel = agency->findTravelById(travelId);
     if (!travel)
