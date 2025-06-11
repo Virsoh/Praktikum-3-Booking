@@ -115,7 +115,7 @@
   </action>
   <action name="actionEintragssuche">
    <property name="icon">
-    <iconset theme="QIcon::ThemeIcon::SystemSearch"/>
+    <iconset theme="system-search"/>
    </property>
    <property name="text">
     <string>Eintragssuche</string>
