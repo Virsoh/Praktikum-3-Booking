@@ -35,6 +35,26 @@ QString RentalCarReservation::getCarType() const
     return carType;
 }
 
+void RentalCarReservation::setPickupLocation(const QString &loc)
+{
+    pickupLocation = loc;
+}
+
+void RentalCarReservation::setReturnLocation(const QString &loc)
+{
+    returnLocation = loc;
+}
+
+void RentalCarReservation::setCompany(const QString &c)
+{
+    company = c;
+}
+
+void RentalCarReservation::setCarType(const QString &t)
+{
+    carType = t;
+}
+
 QString RentalCarReservation::showDetails() const
 {
     return "Mietwagenreservierung mit " + company + ". Abholung am "

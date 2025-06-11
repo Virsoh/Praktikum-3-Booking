@@ -6,12 +6,19 @@
 #include "ui_bookingdialog.h"
 
 #include <QDate>
+#include <QDialogButtonBox>
 
 BookingDetailDialog::BookingDetailDialog(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::BookingDetailDialog)
 {
     ui->setupUi(this);
+
+    connect(ui->lineEditExtra1, &QLineEdit::textChanged, this, &BookingDetailDialog::onFieldModified);
+    connect(ui->lineEditExtra2, &QLineEdit::textChanged, this, &BookingDetailDialog::onFieldModified);
+    connect(ui->dateEditFrom, &QDateEdit::dateChanged, this, &BookingDetailDialog::onFieldModified);
+    connect(ui->dateEditTo, &QDateEdit::dateChanged, this, &BookingDetailDialog::onFieldModified);
+    connect(ui->doubleSpinBoxPrice, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &BookingDetailDialog::onFieldModified);
 }
 
 BookingDetailDialog::~BookingDetailDialog()
@@ -23,6 +30,10 @@ void BookingDetailDialog::setBooking(Booking *booking)
 {
     if (!booking)
         return;
+
+    currentBooking = booking;
+    changed = false;
+    ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
 
     ui->lineEditId->setText(booking->getId());
     ui->dateEditFrom->setDate(booking->getFromDate());
@@ -117,4 +128,34 @@ void BookingDetailDialog::setBooking(Booking *booking)
         ui->listWidgetDetails->clear();
         ui->listWidgetDetails->addItem("Firma: " + car->getCompany());
     }
+}
+
+void BookingDetailDialog::onFieldModified()
+{
+    changed = true;
+    ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
+}
+
+void BookingDetailDialog::accept()
+{
+    if (changed && currentBooking) {
+        currentBooking->setPrice(ui->doubleSpinBoxPrice->value());
+        currentBooking->setFromDate(ui->dateEditFrom->date());
+        currentBooking->setToDate(ui->dateEditTo->date());
+
+        if (auto *train = dynamic_cast<TrainTicket *>(currentBooking)) {
+            train->setFromStation(ui->lineEditExtra1->text());
+            train->setToStation(ui->lineEditExtra2->text());
+        } else if (auto *flight = dynamic_cast<FlightBooking *>(currentBooking)) {
+            flight->setFromDest(ui->lineEditExtra1->text());
+            flight->setToDest(ui->lineEditExtra2->text());
+        } else if (auto *hotel = dynamic_cast<HotelBooking *>(currentBooking)) {
+            hotel->setHotel(ui->lineEditExtra1->text());
+            hotel->setTown(ui->lineEditExtra2->text());
+        } else if (auto *car = dynamic_cast<RentalCarReservation *>(currentBooking)) {
+            car->setPickupLocation(ui->lineEditExtra1->text());
+            car->setReturnLocation(ui->lineEditExtra2->text());
+        }
+    }
+    QDialog::accept();
 }

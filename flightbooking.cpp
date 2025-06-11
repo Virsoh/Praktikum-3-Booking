@@ -32,6 +32,26 @@ QString FlightBooking::getBookingClass() const
     return bookingClass;
 }
 
+void FlightBooking::setFromDest(const QString &dest)
+{
+    fromDest = dest;
+}
+
+void FlightBooking::setToDest(const QString &dest)
+{
+    toDest = dest;
+}
+
+void FlightBooking::setAirline(const QString &a)
+{
+    airline = a;
+}
+
+void FlightBooking::setBookingClass(const QString &cls)
+{
+    bookingClass = cls;
+}
+
 QString FlightBooking::showDetails() const
 {
     return "Flugbuchung von " + fromDest + " nach " + toDest + " mit " + airline + " am "

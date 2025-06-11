@@ -80,6 +80,7 @@
      <string>Datei</string>
     </property>
     <addaction name="actionDateiOeffnen"/>
+    <addaction name="actionSpeichern"/>
    </widget>
    <widget class="QMenu" name="menuEintragssuche">
     <property name="title">
@@ -101,6 +102,7 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionDateiOeffnen"/>
+   <addaction name="actionSpeichern"/>
    <addaction name="actionEintragssuche"/>
   </widget>
   <action name="actionDateiOeffnen">
@@ -124,7 +126,15 @@
     <enum>QAction::NoRole</enum>
    </property>
   </action>
- </widget>
+  <action name="actionSpeichern">
+   <property name="icon">
+    <iconset theme="document-save"/>
+   </property>
+   <property name="text">
+    <string>Speichern</string>
+   </property>
+  </action>
+</widget>
  <resources/>
  <connections/>
 </ui>

@@ -35,6 +35,13 @@ TravelAgencyUI::TravelAgencyUI(TravelAgency *agency, QWidget *parent)
             this,
             &TravelAgencyUI::on_actionEintragssucheClicked);
 
+    connect(ui->actionSpeichern,
+            &QAction::triggered,
+            this,
+            &TravelAgencyUI::on_actionSpeichernTriggered);
+
+    ui->actionSpeichern->setEnabled(false);
+
     connect(ui->reiseTable,
             &QTableWidget::itemDoubleClicked,
             this,
@@ -67,6 +74,9 @@ void TravelAgencyUI::on_actionDateiOeffnenClicked()
                                      .arg(agency->getBookings().size())
                                      .arg(agency->getAllTravels().size())
                                      .arg(agency->getAllCustomers().size()));
+        unsavedChanges = false;
+        ui->actionSpeichern->setEnabled(false);
+        currentTravel = nullptr;
     } catch (const std::exception &e) {
         QMessageBox::critical(this, "Fehler", QString::fromStdString(e.what()));
     }
@@ -146,6 +156,8 @@ void TravelAgencyUI::zeigeBuchungenZurReise(Travel *reise)
     if (!reise || !ui->customerTable)
         return;
 
+    currentTravel = reise;
+
     ui->customerTable->clear();
     ui->customerTable->setRowCount(0);
     ui->customerTable->setColumnCount(4);
@@ -176,7 +188,12 @@ void TravelAgencyUI::zeigeBuchungenZurReise(Travel *reise)
             icon = QIcon(":/icons/zug.png");
 
 
-        QTableWidgetItem *iconItem = new QTableWidgetItem;
+    if (dlg.exec() == QDialog::Accepted) {
+        unsavedChanges = true;
+        ui->actionSpeichern->setEnabled(true);
+        if (currentTravel)
+            zeigeBuchungenZurReise(currentTravel);
+    }
         iconItem->setIcon(icon);
         iconItem->setData(Qt::UserRole, QVariant::fromValue(quintptr(b)));
         ui->customerTable->setItem(row, 0, iconItem);
@@ -235,6 +252,20 @@ void TravelAgencyUI::setupUI()
     if (ui->customerTable)
         ui->customerTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
     if (ui->reiseTable)
+
+void TravelAgencyUI::on_actionSpeichernTriggered()
+{
+    QString filename = QFileDialog::getSaveFileName(this, "Speichern", "", "JSON (*.json)");
+    if (filename.isEmpty())
+        return;
+    try {
+        agency->writeFile(filename.toStdString());
+        unsavedChanges = false;
+        ui->actionSpeichern->setEnabled(false);
+    } catch (const std::exception &e) {
+        QMessageBox::critical(this, "Fehler", QString::fromStdString(e.what()));
+    }
+}
         ui->reiseTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
 }
 
