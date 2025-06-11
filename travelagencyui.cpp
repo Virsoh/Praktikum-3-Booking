@@ -149,7 +149,7 @@ void TravelAgencyUI::zeigeBuchungenZurReise(Travel *reise)
     ui->customerTable->clear();
     ui->customerTable->setRowCount(0);
     ui->customerTable->setColumnCount(4);
-    ui->customerTable->setHorizontalHeaderLabels({"", "Start", "Ende", "Preis"});
+    ui->customerTable->setHorizontalHeaderLabels({"Buchung", "Start", "Ende", "Preis"});
 
     const auto &buchungen = reise->getTravelBookings();
     for (Booking *b : buchungen) {
@@ -158,13 +158,13 @@ void TravelAgencyUI::zeigeBuchungenZurReise(Travel *reise)
 
         QIcon icon;
         if (dynamic_cast<FlightBooking *>(b))
-            icon = QIcon::fromTheme("airplane");
+            icon = QIcon(":/icons/flug.png");
         else if (dynamic_cast<HotelBooking *>(b))
-            icon = QIcon::fromTheme("hotel");
+            icon = QIcon(":/icons/hotel.png");
         else if (dynamic_cast<RentalCarReservation *>(b))
-            icon = QIcon::fromTheme("car");
+            icon = QIcon(":/icons/auto.png");
         else if (dynamic_cast<TrainTicket *>(b))
-            icon = QIcon::fromTheme("train");
+            icon = QIcon(":/icons/zug.png");
 
         QTableWidgetItem *iconItem = new QTableWidgetItem;
         iconItem->setIcon(icon);

@@ -1,5 +1,9 @@
 <RCC>
     <qresource prefix="/icons">
         <file>icons/open.png</file>
+        <file>icons/flug.png</file>
+        <file>icons/hotel.png</file>
+        <file>icons/auto.png</file>
+        <file>icons/zug.png</file>
     </qresource>
 </RCC>
