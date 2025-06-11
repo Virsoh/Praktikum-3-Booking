@@ -26,6 +26,10 @@ public:
     QString getToDest() const;
     QString getAirline() const;
     QString getBookingClass() const;
+    void setFromDest(const QString &dest);
+    void setToDest(const QString &dest);
+    void setAirline(const QString &airline);
+    void setBookingClass(const QString &cls);
     QString showDetails() const override;
 };
 

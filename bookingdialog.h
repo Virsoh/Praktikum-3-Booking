@@ -19,9 +19,18 @@ public:
     ~BookingDetailDialog();
 
     void setBooking(Booking *booking);
+    bool isModified() const { return changed; }
+
+protected:
+    void accept() override;
 
 private:
     Ui::BookingDetailDialog *ui;
+    Booking *currentBooking = nullptr;
+    bool changed = false;
+
+private slots:
+    void onFieldModified();
 };
 
 #endif // BOOKINGDETAILDIALOG_H
