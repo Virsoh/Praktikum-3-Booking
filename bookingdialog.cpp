@@ -8,6 +8,7 @@
 #include <QDate>
 #include <QDialogButtonBox>
 
+// Dialog zusammenbauen und Eingaben beobachten
 BookingDetailDialog::BookingDetailDialog(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::BookingDetailDialog)
@@ -21,11 +22,13 @@ BookingDetailDialog::BookingDetailDialog(QWidget *parent)
     connect(ui->doubleSpinBoxPrice, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &BookingDetailDialog::onFieldModified);
 }
 
+// UI zerstören
 BookingDetailDialog::~BookingDetailDialog()
 {
     delete ui;
 }
 
+// Info einer Buchung in die Felder laden
 void BookingDetailDialog::setBooking(Booking *booking)
 {
     if (!booking)
@@ -130,12 +133,14 @@ void BookingDetailDialog::setBooking(Booking *booking)
     }
 }
 
+// wenn was geändert wird, Speichern-Button aktivieren
 void BookingDetailDialog::onFieldModified()
 {
     changed = true;
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
 }
 
+// Änderungen zurück in das Objekt schreiben
 void BookingDetailDialog::accept()
 {
     if (changed && currentBooking) {

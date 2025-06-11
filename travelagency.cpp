@@ -18,6 +18,7 @@
 using json = nlohmann::json;
 using namespace std;
 
+// gibt alle Buchungen frei
 TravelAgency::~TravelAgency()
 {
     for (Booking *booking : bookings) {
@@ -26,6 +27,7 @@ TravelAgency::~TravelAgency()
     bookings.clear();
 }
 
+// leert die internen Listen
 void TravelAgency::reset()
 {
     for (Booking *b : bookings)
@@ -33,6 +35,7 @@ void TravelAgency::reset()
     bookings.clear();
 }
 
+// liest die JSON-Datei ein
 void TravelAgency::readFile(const std::string &filename)
 {
     bookings.clear();
@@ -219,10 +222,12 @@ void TravelAgency::readFile(const std::string &filename)
     }
 }
 
+// Liste aller Buchungen
 const std::vector<Booking *> &TravelAgency::getBookings() const
 {
     return bookings;
 }
+// schreibt alle Daten wieder raus
 void TravelAgency::writeFile(const std::string &filename) const
 {
     json j;
@@ -351,6 +356,7 @@ void TravelAgency::writeFile(const std::string &filename) const
     QMessageBox::information(nullptr, "Statistik", message);
 }
 
+// Platzhalter zum Bearbeiten einer Buchung
 void TravelAgency::editBooking(const QString &id)
 {
     for (Booking *b : bookings) {
@@ -364,6 +370,7 @@ void TravelAgency::editBooking(const QString &id)
     qDebug() << "Keine Buchung mit ID" << id << "gefunden.";
 }
 
+// sucht einen Kunden nach ID
 Customer *TravelAgency::findCustomerById(const QString &id) const
 {
     for (Customer *c : allCustomers) {
@@ -373,6 +380,7 @@ Customer *TravelAgency::findCustomerById(const QString &id) const
     return nullptr;
 }
 
+// sucht eine Reise nach ID
 Travel *TravelAgency::findTravelById(const QString &id) const
 {
     for (Travel *t : allTravels) {

@@ -17,6 +17,7 @@
 #include "travel.h"
 #include "ui_travelagencyui.h"
 
+// Hauptfenster einrichten
 TravelAgencyUI::TravelAgencyUI(TravelAgency *agency, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::TravelAgencyUI)
@@ -53,11 +54,13 @@ TravelAgencyUI::TravelAgencyUI(TravelAgency *agency, QWidget *parent)
             &TravelAgencyUI::onCustomerTableDoubleClicked);
 }
 
+// Aufräumen
 TravelAgencyUI::~TravelAgencyUI()
 {
     delete ui;
 }
 
+// JSON laden
 void TravelAgencyUI::on_actionDateiOeffnenClicked()
 {
     QString filename = QFileDialog::getOpenFileName(this, "Datei öffnen", "", "Alle Dateien (*.*)");
@@ -82,6 +85,7 @@ void TravelAgencyUI::on_actionDateiOeffnenClicked()
     }
 }
 
+// Kunden suchen und Reisen zeigen
 void TravelAgencyUI::on_actionEintragssucheClicked()
 {
     QString customerId;
@@ -101,6 +105,7 @@ void TravelAgencyUI::on_actionEintragssucheClicked()
     zeigeReisenDesKunden(customer);
 }
 
+// kleines Dialogfeld für die ID
 bool TravelAgencyUI::showCustomerIdDialog(QString &idOut)
 {
     QDialog dialog(this);
@@ -122,6 +127,7 @@ bool TravelAgencyUI::showCustomerIdDialog(QString &idOut)
     return false;
 }
 
+// füllt die Tabelle mit den Reisen
 void TravelAgencyUI::zeigeReisenDesKunden(Customer *kunde)
 {
     ui->reiseTable->clear();
@@ -151,6 +157,7 @@ void TravelAgencyUI::zeigeReisenDesKunden(Customer *kunde)
 }
 
 
+// zeigt alle Buchungen einer Reise an
 void TravelAgencyUI::zeigeBuchungenZurReise(Travel *reise)
 {
     if (!reise || !ui->customerTable)
@@ -177,6 +184,14 @@ void TravelAgencyUI::zeigeBuchungenZurReise(Travel *reise)
             icon = QIcon(":/icons/icons/auto.png");
         else if (dynamic_cast<TrainTicket *>(b))
             icon = QIcon(":/icons/icons/zug.png");
+// Detaildialog für eine Buchung öffnen
+// Beim Klick auf eine Reise deren Buchungen laden
+// Grundeinstellungen für Tabellen
+// Menü und Toolbar anpassen
+// Tabellen leeren
+// Kundendaten in die Felder schreiben
+// nicht mehr genutzt - zeigt Details einer Reise
+// Speichert alle Daten in eine Datei
         else if (dynamic_cast<FlightBooking *>(b))
             icon = QIcon(":/icons/flug.png");
         else if (dynamic_cast<HotelBooking *>(b))
