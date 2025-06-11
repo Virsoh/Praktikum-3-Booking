@@ -27,3 +27,18 @@ QDate Booking::getToDate() const
 {
     return toDate;
 }
+
+void Booking::setPrice(double p)
+{
+    price = p;
+}
+
+void Booking::setFromDate(const QDate &d)
+{
+    fromDate = d;
+}
+
+void Booking::setToDate(const QDate &d)
+{
+    toDate = d;
+}

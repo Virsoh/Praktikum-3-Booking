@@ -26,6 +26,21 @@ QString HotelBooking::getRoomType() const
     return roomType;
 }
 
+void HotelBooking::setHotel(const QString &h)
+{
+    hotel = h;
+}
+
+void HotelBooking::setTown(const QString &t)
+{
+    town = t;
+}
+
+void HotelBooking::setRoomType(const QString &rt)
+{
+    roomType = rt;
+}
+
 QString HotelBooking::showDetails() const
 {
     return "Hotelreservierung im " + hotel + " in " + town + " vom "

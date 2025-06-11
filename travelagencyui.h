@@ -56,6 +56,9 @@ private:
     QAction *actionSearchCustomer;
     QAction *actionSave;
 
+    bool unsavedChanges = false;
+    Travel *currentTravel = nullptr;
+
     // Helper methods
     void setupUI();
     void setupMenuAndToolbar();
@@ -66,6 +69,7 @@ private:
 private slots:
     void on_actionDateiOeffnenClicked();
     void on_actionEintragssucheClicked();
+    void on_actionSpeichernTriggered();
     void onCustomerTableDoubleClicked(QTableWidgetItem *item);
     void onTravelTableDoubleClicked(QTableWidgetItem *item);
 };
