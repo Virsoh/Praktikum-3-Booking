@@ -1,0 +1,51 @@
+# Build-Verzeichnisse
+build*/
+Build*/
+out*/
+cmake-build-*/
+
+# CMake generierte Dateien
+CMakeFiles/
+CMakeCache.txt
+Makefile
+cmake_install.cmake
+*.cbp
+
+# Qt Creator spezifisch
+*.pro.user
+*.pro.user.*
+*.autosave
+*.qrc.auto
+*.qmlproject.user
+*.creator.*
+*.creator
+*.user
+
+# Objektdateien / Binaries
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+
+# MOC / UIC / RCC generierte Dateien
+moc_*.cpp
+ui_*.h
+qrc_*.cpp
+
+# Ressourcen-Icons ausschließen
+resources/icons/*
+!resources/icons/.gitkeep
+
+# VSCode / CLion / IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Systemdateien
+.DS_Store
+Thumbs.db

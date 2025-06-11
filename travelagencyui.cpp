@@ -166,6 +166,16 @@ void TravelAgencyUI::zeigeBuchungenZurReise(Travel *reise)
         else if (dynamic_cast<TrainTicket *>(b))
             icon = QIcon(":/icons/icons/zug.png");
 
+        else if (dynamic_cast<FlightBooking *>(b))
+            icon = QIcon(":/icons/flug.png");
+        else if (dynamic_cast<HotelBooking *>(b))
+            icon = QIcon(":/icons/hotel.png");
+        else if (dynamic_cast<RentalCarReservation *>(b))
+            icon = QIcon(":/icons/auto.png");
+        else if (dynamic_cast<TrainTicket *>(b))
+            icon = QIcon(":/icons/zug.png");
+
+
         QTableWidgetItem *iconItem = new QTableWidgetItem;
         iconItem->setIcon(icon);
         iconItem->setData(Qt::UserRole, QVariant::fromValue(quintptr(b)));
