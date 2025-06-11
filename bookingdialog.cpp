@@ -7,6 +7,7 @@
 
 #include <QDate>
 #include <QDialogButtonBox>
+#include <QPushButton>
 
 // Dialog 
 BookingDetailDialog::BookingDetailDialog(QWidget *parent)

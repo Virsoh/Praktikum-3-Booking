@@ -25,7 +25,6 @@ TravelAgencyUI::TravelAgencyUI(TravelAgency *agency, QWidget *parent)
 {
     ui->setupUi(this);
     setupUI();
-    setupMenuAndToolbar();
 
     connect(ui->actionDateiOeffnen,
             &QAction::triggered,
@@ -243,7 +242,6 @@ void TravelAgencyUI::onCustomerTableDoubleClicked(QTableWidgetItem *item)
         if (currentTravel)
             zeigeBuchungenZurReise(currentTravel);
     }
-}
 // Beim Klick auf eine Reise deren Buchungen laden
 
 
