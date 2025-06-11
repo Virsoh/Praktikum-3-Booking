@@ -22,6 +22,9 @@ public:
     QString getHotel() const;
     QString getTown() const;
     QString getRoomType() const;
+    void setHotel(const QString &h);
+    void setTown(const QString &t);
+    void setRoomType(const QString &rt);
     QString showDetails() const override;
 };
 

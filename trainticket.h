@@ -33,6 +33,12 @@ public:
     QString getArrivalTime() const;
     QString getBookingClass() const;
     QVector<QString> getStops() const;
+    void setFromStation(const QString &from);
+    void setToStation(const QString &to);
+    void setDepartureTime(const QString &t);
+    void setArrivalTime(const QString &t);
+    void setBookingClass(const QString &cls);
+    void setStops(const QVector<QString> &s);
 
     QString showDetails() const override;
 };
