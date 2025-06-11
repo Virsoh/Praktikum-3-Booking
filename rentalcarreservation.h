@@ -26,6 +26,10 @@ public:
     QString getReturnLocation() const;
     QString getCompany() const;
     QString getCarType() const;
+    void setPickupLocation(const QString &loc);
+    void setReturnLocation(const QString &loc);
+    void setCompany(const QString &c);
+    void setCarType(const QString &t);
     QString showDetails() const override;
 };
 

@@ -35,6 +35,13 @@ TravelAgencyUI::TravelAgencyUI(TravelAgency *agency, QWidget *parent)
             this,
             &TravelAgencyUI::on_actionEintragssucheClicked);
 
+    connect(ui->actionSpeichern,
+            &QAction::triggered,
+            this,
+            &TravelAgencyUI::on_actionSpeichernTriggered);
+
+    ui->actionSpeichern->setEnabled(false);
+
     connect(ui->reiseTable,
             &QTableWidget::itemDoubleClicked,
             this,
@@ -67,6 +74,9 @@ void TravelAgencyUI::on_actionDateiOeffnenClicked()
                                      .arg(agency->getBookings().size())
                                      .arg(agency->getAllTravels().size())
                                      .arg(agency->getAllCustomers().size()));
+        unsavedChanges = false;
+        ui->actionSpeichern->setEnabled(false);
+        currentTravel = nullptr;
     } catch (const std::exception &e) {
         QMessageBox::critical(this, "Fehler", QString::fromStdString(e.what()));
     }
@@ -146,6 +156,8 @@ void TravelAgencyUI::zeigeBuchungenZurReise(Travel *reise)
     if (!reise || !ui->customerTable)
         return;
 
+    currentTravel = reise;
+
     ui->customerTable->clear();
     ui->customerTable->setRowCount(0);
     ui->customerTable->setColumnCount(4);
@@ -165,7 +177,6 @@ void TravelAgencyUI::zeigeBuchungenZurReise(Travel *reise)
             icon = QIcon(":/icons/icons/auto.png");
         else if (dynamic_cast<TrainTicket *>(b))
             icon = QIcon(":/icons/icons/zug.png");
-
         else if (dynamic_cast<FlightBooking *>(b))
             icon = QIcon(":/icons/flug.png");
         else if (dynamic_cast<HotelBooking *>(b))
@@ -174,6 +185,7 @@ void TravelAgencyUI::zeigeBuchungenZurReise(Travel *reise)
             icon = QIcon(":/icons/auto.png");
         else if (dynamic_cast<TrainTicket *>(b))
             icon = QIcon(":/icons/zug.png");
+
 
 
         QTableWidgetItem *iconItem = new QTableWidgetItem;
@@ -210,7 +222,15 @@ void TravelAgencyUI::onCustomerTableDoubleClicked(QTableWidgetItem *item)
 
     BookingDetailDialog dlg(this);
     dlg.setBooking(booking);
+    if (dlg.exec() == QDialog::Accepted) {
+        unsavedChanges = true;
+        ui->actionSpeichern->setEnabled(true);
+        if (currentTravel)
+            zeigeBuchungenZurReise(currentTravel);
+    }
+
     dlg.exec();
+
 }
 void TravelAgencyUI::onTravelTableDoubleClicked(QTableWidgetItem *item)
 {
@@ -269,4 +289,18 @@ void TravelAgencyUI::showTravelDetails(Travel *travel)
     if (!travel->getTravelBookings().empty())
         dlg.setBooking(travel->getTravelBookings().front());
     dlg.exec();
+}
+
+void TravelAgencyUI::on_actionSpeichernTriggered()
+{
+    QString filename = QFileDialog::getSaveFileName(this, "Speichern", "", "JSON (*.json)");
+    if (filename.isEmpty())
+        return;
+    try {
+        agency->writeFile(filename.toStdString());
+        unsavedChanges = false;
+        ui->actionSpeichern->setEnabled(false);
+    } catch (const std::exception &e) {
+        QMessageBox::critical(this, "Fehler", QString::fromStdString(e.what()));
+    }
 }
