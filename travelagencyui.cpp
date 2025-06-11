@@ -17,6 +17,7 @@
 #include "travel.h"
 #include "ui_travelagencyui.h"
 
+// Hauptfenster einrichten
 TravelAgencyUI::TravelAgencyUI(TravelAgency *agency, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::TravelAgencyUI)
@@ -35,6 +36,13 @@ TravelAgencyUI::TravelAgencyUI(TravelAgency *agency, QWidget *parent)
             this,
             &TravelAgencyUI::on_actionEintragssucheClicked);
 
+    connect(ui->actionSpeichern,
+            &QAction::triggered,
+            this,
+            &TravelAgencyUI::on_actionSpeichernTriggered);
+
+    ui->actionSpeichern->setEnabled(false);
+
     connect(ui->reiseTable,
             &QTableWidget::itemDoubleClicked,
             this,
@@ -46,11 +54,13 @@ TravelAgencyUI::TravelAgencyUI(TravelAgency *agency, QWidget *parent)
             &TravelAgencyUI::onCustomerTableDoubleClicked);
 }
 
+// Aufräumen
 TravelAgencyUI::~TravelAgencyUI()
 {
     delete ui;
 }
 
+// JSON laden
 void TravelAgencyUI::on_actionDateiOeffnenClicked()
 {
     QString filename = QFileDialog::getOpenFileName(this, "Datei öffnen", "", "Alle Dateien (*.*)");
@@ -67,11 +77,15 @@ void TravelAgencyUI::on_actionDateiOeffnenClicked()
                                      .arg(agency->getBookings().size())
                                      .arg(agency->getAllTravels().size())
                                      .arg(agency->getAllCustomers().size()));
+        unsavedChanges = false;
+        ui->actionSpeichern->setEnabled(false);
+        currentTravel = nullptr;
     } catch (const std::exception &e) {
         QMessageBox::critical(this, "Fehler", QString::fromStdString(e.what()));
     }
 }
 
+// Kunden suchen und Reisen zeigen
 void TravelAgencyUI::on_actionEintragssucheClicked()
 {
     QString customerId;
@@ -91,6 +105,7 @@ void TravelAgencyUI::on_actionEintragssucheClicked()
     zeigeReisenDesKunden(customer);
 }
 
+// kleines Dialogfeld für die ID
 bool TravelAgencyUI::showCustomerIdDialog(QString &idOut)
 {
     QDialog dialog(this);
@@ -112,6 +127,7 @@ bool TravelAgencyUI::showCustomerIdDialog(QString &idOut)
     return false;
 }
 
+// füllt die Tabelle mit den Reisen
 void TravelAgencyUI::zeigeReisenDesKunden(Customer *kunde)
 {
     ui->reiseTable->clear();
@@ -141,15 +157,18 @@ void TravelAgencyUI::zeigeReisenDesKunden(Customer *kunde)
 }
 
 
+// zeigt alle Buchungen einer Reise an
 void TravelAgencyUI::zeigeBuchungenZurReise(Travel *reise)
 {
     if (!reise || !ui->customerTable)
         return;
 
+    currentTravel = reise;
+
     ui->customerTable->clear();
     ui->customerTable->setRowCount(0);
     ui->customerTable->setColumnCount(4);
-    ui->customerTable->setHorizontalHeaderLabels({"", "Start", "Ende", "Preis"});
+    ui->customerTable->setHorizontalHeaderLabels({"Buchung", "Start", "Ende", "Preis"});
 
     const auto &buchungen = reise->getTravelBookings();
     for (Booking *b : buchungen) {
@@ -158,13 +177,13 @@ void TravelAgencyUI::zeigeBuchungenZurReise(Travel *reise)
 
         QIcon icon;
         if (dynamic_cast<FlightBooking *>(b))
-            icon = QIcon::fromTheme("airplane");
+            icon = QIcon(":/icons/icons/flug.png");
         else if (dynamic_cast<HotelBooking *>(b))
-            icon = QIcon::fromTheme("hotel");
+            icon = QIcon(":/icons/icons/hotel.png");
         else if (dynamic_cast<RentalCarReservation *>(b))
-            icon = QIcon::fromTheme("car");
+            icon = QIcon(":/icons/icons/auto.png");
         else if (dynamic_cast<TrainTicket *>(b))
-            icon = QIcon::fromTheme("train");
+            icon = QIcon(":/icons/icons/zug.png");
 
         QTableWidgetItem *iconItem = new QTableWidgetItem;
         iconItem->setIcon(icon);
@@ -183,6 +202,7 @@ void TravelAgencyUI::zeigeBuchungenZurReise(Travel *reise)
     ui->customerTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
 }
 
+// Detaildialog für eine Buchung öffnen
 void TravelAgencyUI::onCustomerTableDoubleClicked(QTableWidgetItem *item)
 {
     if (!item)
@@ -200,14 +220,14 @@ void TravelAgencyUI::onCustomerTableDoubleClicked(QTableWidgetItem *item)
 
     BookingDetailDialog dlg(this);
     dlg.setBooking(booking);
-    dlg.exec();
-=======
-void TravelAgencyUI::onCustomerTableDoubleClicked(QTableWidgetItem *)
-{
-    // Placeholder for future implementation
-
+    if (dlg.exec() == QDialog::Accepted) {
+        unsavedChanges = true;
+        ui->actionSpeichern->setEnabled(true);
+        if (currentTravel)
+            zeigeBuchungenZurReise(currentTravel);
+    }
 }
-
+// Beim Klick auf eine Reise deren Buchungen laden
 void TravelAgencyUI::onTravelTableDoubleClicked(QTableWidgetItem *item)
 {
     if (!item)
@@ -215,7 +235,6 @@ void TravelAgencyUI::onTravelTableDoubleClicked(QTableWidgetItem *item)
     int row = item->row();
     QString travelId = ui->reiseTable->item(row, 0)->text();
 
-    QString travelId = item->text();
 
     Travel *travel = agency->findTravelById(travelId);
     if (!travel)
@@ -224,14 +243,9 @@ void TravelAgencyUI::onTravelTableDoubleClicked(QTableWidgetItem *item)
 
     zeigeBuchungenZurReise(travel);
 
-    BookingDetailDialog dlg(this);
-    if (!travel->getTravelBookings().empty()) {
-        dlg.setBooking(travel->getTravelBookings().front());
-    }
-    dlg.exec();
-
 }
 
+// Grundeinstellungen für Tabellen
 void TravelAgencyUI::setupUI()
 {
     // ensure tables have no edit triggers by default
@@ -241,11 +255,13 @@ void TravelAgencyUI::setupUI()
         ui->reiseTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
 }
 
+// Menü und Toolbar anpassen
 void TravelAgencyUI::setupMenuAndToolbar()
 {
     // placeholder: no additional setup needed
 }
 
+// Tabellen leeren
 void TravelAgencyUI::clearTables()
 {
     if (ui->customerTable)
@@ -254,6 +270,7 @@ void TravelAgencyUI::clearTables()
         ui->reiseTable->clearContents();
 }
 
+// Kundendaten in die Felder schreiben
 void TravelAgencyUI::showCustomerInfo(Customer *customer)
 {
     if (!customer)
@@ -263,6 +280,7 @@ void TravelAgencyUI::showCustomerInfo(Customer *customer)
     ui->lineEditLastName->setText(customer->getLastName());
 }
 
+// nicht mehr genutzt - zeigt Details einer Reise
 void TravelAgencyUI::showTravelDetails(Travel *travel)
 {
     if (!travel)
@@ -272,4 +290,19 @@ void TravelAgencyUI::showTravelDetails(Travel *travel)
     if (!travel->getTravelBookings().empty())
         dlg.setBooking(travel->getTravelBookings().front());
     dlg.exec();
+}
+
+// Speichert alle Daten in eine Datei
+void TravelAgencyUI::on_actionSpeichernTriggered()
+{
+    QString filename = QFileDialog::getSaveFileName(this, "Speichern", "", "JSON (*.json)");
+    if (filename.isEmpty())
+        return;
+    try {
+        agency->writeFile(filename.toStdString());
+        unsavedChanges = false;
+        ui->actionSpeichern->setEnabled(false);
+    } catch (const std::exception &e) {
+        QMessageBox::critical(this, "Fehler", QString::fromStdString(e.what()));
+    }
 }

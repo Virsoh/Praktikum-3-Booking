@@ -13,6 +13,10 @@ public:
     QDate getFromDate() const;
     QDate getToDate() const;
 
+    void setPrice(double p);
+    void setFromDate(const QDate &d);
+    void setToDate(const QDate &d);
+
     virtual QString showDetails() const = 0;
 
 protected:
