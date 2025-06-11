@@ -52,42 +52,49 @@ QVector<QString> TrainTicket::getStops() const
 }
 
 // Startbahnhof setzen
+
 void TrainTicket::setFromStation(const QString &from)
 {
     fromStation = from;
 }
 
 // Zielbahnhof setzen
+
 void TrainTicket::setToStation(const QString &to)
 {
     toStation = to;
 }
 
 // Abfahrtszeit setzen
+
 void TrainTicket::setDepartureTime(const QString &t)
 {
     departureTime = t;
 }
 
 // Ankunftszeit setzen
+
 void TrainTicket::setArrivalTime(const QString &t)
 {
     arrivalTime = t;
 }
 
 // Tarifcode setzen
+
 void TrainTicket::setBookingClass(const QString &cls)
 {
     bookingClass = cls;
 }
 
 // Haltepunkte setzen
+
 void TrainTicket::setStops(const QVector<QString> &s)
 {
     stops = s;
 }
 
-// Schöner Text für die Anzeige
+// Text für die Anzeige
+
 QString TrainTicket::showDetails() const
 {
     QString details = "Zugbuchung von " + fromStation + " nach " + toStation + " am "

@@ -54,7 +54,7 @@ TravelAgencyUI::TravelAgencyUI(TravelAgency *agency, QWidget *parent)
             &TravelAgencyUI::onCustomerTableDoubleClicked);
 }
 
-// Aufräumen
+
 TravelAgencyUI::~TravelAgencyUI()
 {
     delete ui;
@@ -105,7 +105,7 @@ void TravelAgencyUI::on_actionEintragssucheClicked()
     zeigeReisenDesKunden(customer);
 }
 
-// kleines Dialogfeld für die ID
+// Dialogfeld für ID
 bool TravelAgencyUI::showCustomerIdDialog(QString &idOut)
 {
     QDialog dialog(this);
@@ -185,6 +185,23 @@ void TravelAgencyUI::zeigeBuchungenZurReise(Travel *reise)
         else if (dynamic_cast<TrainTicket *>(b))
             icon = QIcon(":/icons/icons/zug.png");
 
+        else if (dynamic_cast<HotelBooking *>(b))
+            icon = QIcon(":/icons/icons/hotel.png");
+        else if (dynamic_cast<RentalCarReservation *>(b))
+            icon = QIcon(":/icons/icons/auto.png");
+        else if (dynamic_cast<TrainTicket *>(b))
+            icon = QIcon(":/icons/icons/zug.png");
+        else if (dynamic_cast<FlightBooking *>(b))
+            icon = QIcon(":/icons/flug.png");
+        else if (dynamic_cast<HotelBooking *>(b))
+            icon = QIcon(":/icons/hotel.png");
+        else if (dynamic_cast<RentalCarReservation *>(b))
+            icon = QIcon(":/icons/auto.png");
+        else if (dynamic_cast<TrainTicket *>(b))
+            icon = QIcon(":/icons/zug.png");
+
+
+
         QTableWidgetItem *iconItem = new QTableWidgetItem;
         iconItem->setIcon(icon);
         iconItem->setData(Qt::UserRole, QVariant::fromValue(quintptr(b)));
@@ -228,6 +245,11 @@ void TravelAgencyUI::onCustomerTableDoubleClicked(QTableWidgetItem *item)
     }
 }
 // Beim Klick auf eine Reise deren Buchungen laden
+
+
+    dlg.exec();
+
+}
 void TravelAgencyUI::onTravelTableDoubleClicked(QTableWidgetItem *item)
 {
     if (!item)
@@ -248,17 +270,10 @@ void TravelAgencyUI::onTravelTableDoubleClicked(QTableWidgetItem *item)
 // Grundeinstellungen für Tabellen
 void TravelAgencyUI::setupUI()
 {
-    // ensure tables have no edit triggers by default
     if (ui->customerTable)
         ui->customerTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
     if (ui->reiseTable)
         ui->reiseTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
-}
-
-// Menü und Toolbar anpassen
-void TravelAgencyUI::setupMenuAndToolbar()
-{
-    // placeholder: no additional setup needed
 }
 
 // Tabellen leeren
@@ -280,12 +295,11 @@ void TravelAgencyUI::showCustomerInfo(Customer *customer)
     ui->lineEditLastName->setText(customer->getLastName());
 }
 
-// nicht mehr genutzt - zeigt Details einer Reise
+// zeigt Details einer Reise
 void TravelAgencyUI::showTravelDetails(Travel *travel)
 {
     if (!travel)
         return;
-    // currently only showing first booking in dialog
     BookingDetailDialog dlg(this);
     if (!travel->getTravelBookings().empty())
         dlg.setBooking(travel->getTravelBookings().front());
@@ -293,6 +307,7 @@ void TravelAgencyUI::showTravelDetails(Travel *travel)
 }
 
 // Speichert alle Daten in eine Datei
+
 void TravelAgencyUI::on_actionSpeichernTriggered()
 {
     QString filename = QFileDialog::getSaveFileName(this, "Speichern", "", "JSON (*.json)");

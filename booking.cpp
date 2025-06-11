@@ -1,6 +1,6 @@
 #include "booking.h"
 
-// Einfacher Konstruktor, speichert alle Infos
+
 Booking::Booking(QString id, double price, QDate fromDate, QDate toDate)
     : id(id)
     , price(price)
@@ -8,7 +8,7 @@ Booking::Booking(QString id, double price, QDate fromDate, QDate toDate)
     , toDate(toDate)
 {}
 
-// nix zu tun beim Zerstören
+
 Booking::~Booking() {}
 
 // ID zurückgeben
@@ -34,19 +34,24 @@ QDate Booking::getToDate() const
     return toDate;
 }
 
+
 // Preis setzen
+
 void Booking::setPrice(double p)
 {
     price = p;
 }
 
+
 // Startdatum setzen
+
 void Booking::setFromDate(const QDate &d)
 {
     fromDate = d;
 }
 
 // Enddatum setzen
+
 void Booking::setToDate(const QDate &d)
 {
     toDate = d;
