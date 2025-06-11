@@ -12,6 +12,7 @@ FlightBooking::FlightBooking(QString id,
     , fromDest(fromDest)
     , toDest(toDest)
     , airline(airline)
+    , bookingClass(bookingClass)
 {}
 
 QString FlightBooking::getFromDest() const
