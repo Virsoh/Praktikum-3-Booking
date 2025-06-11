@@ -8,6 +8,7 @@
 #include <QDate>
 #include <QDialogButtonBox>
 
+// Dialog 
 BookingDetailDialog::BookingDetailDialog(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::BookingDetailDialog)
@@ -21,11 +22,13 @@ BookingDetailDialog::BookingDetailDialog(QWidget *parent)
     connect(ui->doubleSpinBoxPrice, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &BookingDetailDialog::onFieldModified);
 }
 
+// UI destruktor
 BookingDetailDialog::~BookingDetailDialog()
 {
     delete ui;
 }
 
+// Buchungsinformationen laden
 void BookingDetailDialog::setBooking(Booking *booking)
 {
     if (!booking)
@@ -48,7 +51,7 @@ void BookingDetailDialog::setBooking(Booking *booking)
 
         ui->listWidgetDetails->clear();
 
-        // translate booking class codes to human readable form
+        // buchungs codes übersetzen
         const QString &classCode = train->getBookingClass();
         QString classDesc;
         if (classCode == "SSP1")
@@ -130,11 +133,15 @@ void BookingDetailDialog::setBooking(Booking *booking)
     }
 }
 
+
+// bei änderung Speichern-Button aktivieren
+
 void BookingDetailDialog::onFieldModified()
 {
     changed = true;
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
 }
+// Änderungen zurück in das Objekt schreiben
 
 void BookingDetailDialog::accept()
 {
