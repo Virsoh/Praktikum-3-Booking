@@ -10,7 +10,11 @@ TrainTicket::TrainTicket(QString id,
                          const QString &departureTime,
                          const QString &arrivalTime,
                          const QString &bookingClass,
-                         const QVector<QString> &stops)
+                         const QVector<QString> &stops,
+                         double fromLatitude,
+                         double fromLongitude,
+                         double toLatitude,
+                         double toLongitude)
     : Booking(id, price, fromDate, toDate)
     , fromStation(fromStation)
     , toStation(toStation)
@@ -18,6 +22,10 @@ TrainTicket::TrainTicket(QString id,
     , arrivalTime(arrivalTime)
     , bookingClass(bookingClass)
     , stops(stops)
+    , fromLatitude(fromLatitude)
+    , fromLongitude(fromLongitude)
+    , toLatitude(toLatitude)
+    , toLongitude(toLongitude)
 {}
 
 // Startbahnhof

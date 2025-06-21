@@ -7,11 +7,15 @@ HotelBooking::HotelBooking(const QString &id,
                            const QDate &toDate,
                            const QString &hotel,
                            const QString &town,
-                           const QString &roomType)
+                           const QString &roomType,
+                           double latitude,
+                           double longitude)
     : Booking(id, price, fromDate, toDate)
     , hotel(hotel)
     , town(town)
     , roomType(roomType)
+    , latitude(latitude)
+    , longitude(longitude)
 {}
 
 // Name des Hotels

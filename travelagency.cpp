@@ -139,6 +139,10 @@ void TravelAgency::readFile(const std::string &filename)
                 QString bookingClass = entry.contains("bookingClass")
                                            ? QString::fromStdString(entry["bookingClass"])
                                            : "Y";
+                double fromLat = entry.contains("fromDestLatitude") ? entry["fromDestLatitude"].get<double>() : 0.0;
+                double fromLon = entry.contains("fromDestLongitude") ? entry["fromDestLongitude"].get<double>() : 0.0;
+                double toLat = entry.contains("toDestLatitude") ? entry["toDestLatitude"].get<double>() : 0.0;
+                double toLon = entry.contains("toDestLongitude") ? entry["toDestLongitude"].get<double>() : 0.0;
                 booking = new FlightBooking(bookingId,
                                             price,
                                             fromDate,
@@ -146,7 +150,11 @@ void TravelAgency::readFile(const std::string &filename)
                                             fromDest,
                                             toDest,
                                             airline,
-                                            bookingClass);
+                                            bookingClass,
+                                            fromLat,
+                                            fromLon,
+                                            toLat,
+                                            toLon);
 
             } else if (type == "Hotel") {
                 QString hotel = QString::fromStdString(entry["hotel"]);
@@ -154,7 +162,9 @@ void TravelAgency::readFile(const std::string &filename)
                 QString roomType = entry.contains("roomType")
                                        ? QString::fromStdString(entry["roomType"])
                                        : "Standard";
-                booking = new HotelBooking(bookingId, price, fromDate, toDate, hotel, town, roomType);
+                double lat = entry.contains("latitude") ? entry["latitude"].get<double>() : 0.0;
+                double lon = entry.contains("longitude") ? entry["longitude"].get<double>() : 0.0;
+                booking = new HotelBooking(bookingId, price, fromDate, toDate, hotel, town, roomType, lat, lon);
 
             } else if (type == "Rental" || type == "RentalCar") {
                 QString pickup = QString::fromStdString(entry["pickupLocation"]);
@@ -167,6 +177,10 @@ void TravelAgency::readFile(const std::string &filename)
                     carType = QString::fromStdString(entry["vehicleClass"]);
                 else
                     carType = "Standard";
+                double pickupLat = entry.contains("pickupLatitude") ? entry["pickupLatitude"].get<double>() : 0.0;
+                double pickupLon = entry.contains("pickupLongitude") ? entry["pickupLongitude"].get<double>() : 0.0;
+                double returnLat = entry.contains("returnLatitude") ? entry["returnLatitude"].get<double>() : 0.0;
+                double returnLon = entry.contains("returnLongitude") ? entry["returnLongitude"].get<double>() : 0.0;
                 booking = new RentalCarReservation(bookingId,
                                                    price,
                                                    fromDate,
@@ -174,7 +188,11 @@ void TravelAgency::readFile(const std::string &filename)
                                                    pickup,
                                                    retLoc,
                                                    company,
-                                                   carType);
+                                                   carType,
+                                                   pickupLat,
+                                                   pickupLon,
+                                                   returnLat,
+                                                   returnLon);
 
             } else if (type == "Train") {
                 QString fromStation = QString::fromStdString(entry["fromStation"]);
@@ -199,6 +217,10 @@ void TravelAgency::readFile(const std::string &filename)
                         stops.append(QString::fromStdString(s));
                     }
                 }
+                double fromLat = entry.contains("fromStationLatitude") ? entry["fromStationLatitude"].get<double>() : 0.0;
+                double fromLon = entry.contains("fromStationLongitude") ? entry["fromStationLongitude"].get<double>() : 0.0;
+                double toLat = entry.contains("toStationLatitude") ? entry["toStationLatitude"].get<double>() : 0.0;
+                double toLon = entry.contains("toStationLongitude") ? entry["toStationLongitude"].get<double>() : 0.0;
                 booking = new TrainTicket(bookingId,
                                           price,
                                           fromDate,
@@ -208,7 +230,11 @@ void TravelAgency::readFile(const std::string &filename)
                                           depTime,
                                           arrTime,
                                           bookingClass,
-                                          stops);
+                                          stops,
+                                          fromLat,
+                                          fromLon,
+                                          toLat,
+                                          toLon);
             }
 
             if (booking) {
@@ -246,12 +272,18 @@ void TravelAgency::writeFile(const std::string &filename) const
             entry["toDest"] = fb->getToDest().toStdString();
             entry["airline"] = fb->getAirline().toStdString();
             entry["bookingClass"] = fb->getBookingClass().toStdString();
+            entry["fromDestLatitude"] = fb->getFromLatitude();
+            entry["fromDestLongitude"] = fb->getFromLongitude();
+            entry["toDestLatitude"] = fb->getToLatitude();
+            entry["toDestLongitude"] = fb->getToLongitude();
 
         } else if (const HotelBooking *hb = dynamic_cast<const HotelBooking *>(booking)) {
             entry["type"] = "Hotel";
             entry["hotel"] = hb->getHotel().toStdString();
             entry["town"] = hb->getTown().toStdString();
             entry["roomType"] = hb->getRoomType().toStdString();
+            entry["latitude"] = hb->getLatitude();
+            entry["longitude"] = hb->getLongitude();
 
         } else if (const RentalCarReservation *rc = dynamic_cast<const RentalCarReservation *>(
                        booking)) {
@@ -260,6 +292,10 @@ void TravelAgency::writeFile(const std::string &filename) const
             entry["returnLocation"] = rc->getReturnLocation().toStdString();
             entry["company"] = rc->getCompany().toStdString();
             entry["carType"] = rc->getCarType().toStdString();
+            entry["pickupLatitude"] = rc->getPickupLatitude();
+            entry["pickupLongitude"] = rc->getPickupLongitude();
+            entry["returnLatitude"] = rc->getReturnLatitude();
+            entry["returnLongitude"] = rc->getReturnLongitude();
 
         } else if (const TrainTicket *tt = dynamic_cast<const TrainTicket *>(booking)) {
             entry["type"] = "Train";
@@ -268,6 +304,10 @@ void TravelAgency::writeFile(const std::string &filename) const
             entry["departureTime"] = tt->getDepartureTime().toStdString();
             entry["arrivalTime"] = tt->getArrivalTime().toStdString();
             entry["bookingClass"] = tt->getBookingClass().toStdString();
+            entry["fromStationLatitude"] = tt->getFromLatitude();
+            entry["fromStationLongitude"] = tt->getFromLongitude();
+            entry["toStationLatitude"] = tt->getToLatitude();
+            entry["toStationLongitude"] = tt->getToLongitude();
 
             std::vector<std::string> stops;
             for (const QString &stop : tt->getStops()) {
