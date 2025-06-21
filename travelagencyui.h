@@ -51,7 +51,6 @@ private:
     QVBoxLayout *mainLayout;
     QLabel *customerInfoLabel;
 
-    // Actions
     QAction *actionLoadData;
     QAction *actionSearchCustomer;
     QAction *actionSave;
@@ -59,7 +58,6 @@ private:
     bool unsavedChanges = false;
     Travel *currentTravel = nullptr;
 
-    // Helper methods
     void setupUI();
     void setupMenuAndToolbar();
     void clearTables();
