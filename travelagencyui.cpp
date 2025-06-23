@@ -67,6 +67,7 @@ void TravelAgencyUI::on_actionDateiOeffnenClicked()
         return;
 
     agency->reset();
+    agency->loadAirports("iatacodes.json");
 
     try {
         agency->readFile(filename.toStdString());
@@ -234,7 +235,7 @@ void TravelAgencyUI::onCustomerTableDoubleClicked(QTableWidgetItem *item)
     if (!booking)
         return;
 
-    BookingDetailDialog dlg(this);
+    BookingDetailDialog dlg(agency, this);
     dlg.setBooking(booking);
     if (dlg.exec() == QDialog::Accepted) {
         unsavedChanges = true;
@@ -298,7 +299,7 @@ void TravelAgencyUI::showTravelDetails(Travel *travel)
 {
     if (!travel)
         return;
-    BookingDetailDialog dlg(this);
+    BookingDetailDialog dlg(agency, this);
     if (!travel->getTravelBookings().empty())
         dlg.setBooking(travel->getTravelBookings().front());
     dlg.exec();
