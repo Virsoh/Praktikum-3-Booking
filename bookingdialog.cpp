@@ -5,16 +5,17 @@
 #include "rentalcarreservation.h"
 #include "trainticket.h"
 #include "ui_bookingdialog.h"
+#include <memory>
 
 #include <QDate>
 #include <QDialogButtonBox>
 #include <QPushButton>
 
 // Dialog 
-BookingDetailDialog::BookingDetailDialog(TravelAgency *agency, QWidget *parent)
+BookingDetailDialog::BookingDetailDialog(std::shared_ptr<TravelAgency> agency, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::BookingDetailDialog)
-    , agency(agency)
+    , agency(std::move(agency))
 {
     ui->setupUi(this);
 
@@ -34,7 +35,7 @@ BookingDetailDialog::~BookingDetailDialog()
 }
 
 // Buchungsinformationen laden
-void BookingDetailDialog::setBooking(Booking *booking)
+void BookingDetailDialog::setBooking(std::shared_ptr<Booking> booking)
 {
     if (!booking)
         return;
@@ -48,7 +49,7 @@ void BookingDetailDialog::setBooking(Booking *booking)
     ui->dateEditTo->setDate(booking->getToDate());
     ui->doubleSpinBoxPrice->setValue(booking->getPrice());
 
-    if (auto *train = dynamic_cast<TrainTicket *>(booking)) {
+    if (auto *train = dynamic_cast<TrainTicket *>(booking.get())) {
         ui->lineEditExtra1->setPlaceholderText("Abfahrt von");
         ui->lineEditExtra1->setText(train->getFromStation());
         ui->lineEditExtra2->setPlaceholderText("Ankunft in");
@@ -80,7 +81,7 @@ void BookingDetailDialog::setBooking(Booking *booking)
             ui->listWidgetDetails->addItem(stop);
         }
 
-    } else if (auto *flight = dynamic_cast<FlightBooking *>(booking)) {
+    } else if (auto *flight = dynamic_cast<FlightBooking *>(booking.get())) {
         ui->lineEditExtra1->setPlaceholderText("Von Flughafen");
         ui->lineEditExtra1->setText(flight->getFromDest());
         ui->lineEditExtra2->setPlaceholderText("Nach Flughafen");
@@ -122,7 +123,7 @@ void BookingDetailDialog::setBooking(Booking *booking)
 
         ui->listWidgetDetails->addItem("Buchungsklasse: " + classDesc);
 
-    } else if (auto *hotel = dynamic_cast<HotelBooking *>(booking)) {
+    } else if (auto *hotel = dynamic_cast<HotelBooking *>(booking.get())) {
         ui->lineEditExtra1->setPlaceholderText("Hotel");
         ui->lineEditExtra1->setText(hotel->getHotel());
         ui->lineEditExtra2->setPlaceholderText("Ort");
@@ -145,7 +146,7 @@ void BookingDetailDialog::setBooking(Booking *booking)
 
         ui->listWidgetDetails->addItem("Zimmerkategorie: " + roomDesc);
 
-    } else if (auto *car = dynamic_cast<RentalCarReservation *>(booking)) {
+    } else if (auto *car = dynamic_cast<RentalCarReservation *>(booking.get())) {
         ui->lineEditExtra1->setPlaceholderText("Abholung");
         ui->lineEditExtra1->setText(car->getPickupLocation());
         ui->lineEditExtra2->setPlaceholderText("Rückgabe");
@@ -202,16 +203,16 @@ void BookingDetailDialog::accept()
         currentBooking->setFromDate(ui->dateEditFrom->date());
         currentBooking->setToDate(ui->dateEditTo->date());
 
-        if (auto *train = dynamic_cast<TrainTicket *>(currentBooking)) {
+        if (auto *train = dynamic_cast<TrainTicket *>(currentBooking.get())) {
             train->setFromStation(ui->lineEditExtra1->text());
             train->setToStation(ui->lineEditExtra2->text());
-        } else if (auto *flight = dynamic_cast<FlightBooking *>(currentBooking)) {
+        } else if (auto *flight = dynamic_cast<FlightBooking *>(currentBooking.get())) {
             flight->setFromDest(ui->lineEditExtra1->text());
             flight->setToDest(ui->lineEditExtra2->text());
-        } else if (auto *hotel = dynamic_cast<HotelBooking *>(currentBooking)) {
+        } else if (auto *hotel = dynamic_cast<HotelBooking *>(currentBooking.get())) {
             hotel->setHotel(ui->lineEditExtra1->text());
             hotel->setTown(ui->lineEditExtra2->text());
-        } else if (auto *car = dynamic_cast<RentalCarReservation *>(currentBooking)) {
+        } else if (auto *car = dynamic_cast<RentalCarReservation *>(currentBooking.get())) {
             car->setPickupLocation(ui->lineEditExtra1->text());
             car->setReturnLocation(ui->lineEditExtra2->text());
         }
