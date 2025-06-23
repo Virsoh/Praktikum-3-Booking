@@ -5,6 +5,9 @@
 #include "booking.h"
 #include "customer.h"
 #include "travel.h"
+#include "airport.h"
+#include <QMap>
+#include <memory>
 #include <vector>
 
 class TravelAgency
@@ -13,6 +16,7 @@ private:
     std::vector<Booking *> bookings;
     QVector<Travel *> allTravels;
     QVector<Customer *> allCustomers;
+    QMap<QString, std::shared_ptr<Airport>> airports;
 
 public:
     TravelAgency() = default;
@@ -27,6 +31,8 @@ public:
     void editBooking(const QString &id);
     Customer *findCustomerById(const QString &id) const;
     Travel *findTravelById(const QString &id) const;
+    void loadAirports(const QString &filename);
+    const QMap<QString, std::shared_ptr<Airport>> &getAirports() const { return airports; }
     const std::vector<Booking *> &getBookings() const;
     QVector<Travel *> getAllTravels() const { return allTravels; };
     QVector<Customer *> getAllCustomers() const { return allCustomers; };
