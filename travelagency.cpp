@@ -9,6 +9,7 @@
 #include "json.hpp"
 #include "rentalcarreservation.h"
 #include "trainticket.h"
+#include "airport.h"
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -25,6 +26,7 @@ TravelAgency::~TravelAgency()
         delete booking;
     }
     bookings.clear();
+    airports.clear();
 }
 
 // leert die internen Listen
@@ -33,6 +35,7 @@ void TravelAgency::reset()
     for (Booking *b : bookings)
         delete b;
     bookings.clear();
+    airports.clear();
 }
 
 // liest die JSON-Datei ein
@@ -428,4 +431,49 @@ Travel *TravelAgency::findTravelById(const QString &id) const
             return t;
     }
     return nullptr;
+}
+
+void TravelAgency::loadAirports(const QString &filename)
+{
+    airports.clear();
+
+    QFile file(filename);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qWarning() << "Konnte Flughafen-Datei nicht öffnen:" << filename;
+        return;
+    }
+
+    QByteArray data = file.readAll();
+    try {
+        json j = json::parse(data.constData());
+        for (const auto &entry : j) {
+            QString code;
+            if (entry.contains("iata"))
+                code = QString::fromStdString(entry["iata"]);
+            else if (entry.contains("code"))
+                code = QString::fromStdString(entry["code"]);
+            else if (entry.contains("iata_code"))
+                code = QString::fromStdString(entry["iata_code"]);
+            else
+                continue;
+
+            QString name = entry.contains("name")
+                                ? QString::fromStdString(entry["name"])
+                                : "";
+            QString city = entry.contains("city")
+                                ? QString::fromStdString(entry["city"])
+                                : "";
+            double lat = entry.contains("latitude")
+                            ? entry["latitude"].get<double>()
+                            : (entry.contains("lat") ? entry["lat"].get<double>() : 0.0);
+            double lon = entry.contains("longitude")
+                            ? entry["longitude"].get<double>()
+                            : (entry.contains("lon") ? entry["lon"].get<double>() : 0.0);
+
+            auto ap = std::make_shared<Airport>(code, name, city, lat, lon);
+            airports.insert(code, ap);
+        }
+    } catch (const std::exception &e) {
+        qWarning() << "Fehler beim Einlesen der Flughafen-Daten:" << e.what();
+    }
 }

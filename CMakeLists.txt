@@ -17,6 +17,7 @@ set(PROJECT_SOURCES
   rentalcarreservation.h rentalcarreservation.cpp
   hotelbooking.h hotelbooking.cpp
   flightbooking.h flightbooking.cpp
+  airport.h airport.cpp
   trainticket.h trainticket.cpp
   travelagency.h travelagency.cpp
   json.hpp
