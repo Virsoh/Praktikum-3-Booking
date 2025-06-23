@@ -8,12 +8,20 @@ FlightBooking::FlightBooking(QString id,
                              QString fromDest,
                              QString toDest,
                              QString airline,
-                             QString bookingClass)
+                             QString bookingClass,
+                             double fromLatitude,
+                             double fromLongitude,
+                             double toLatitude,
+                             double toLongitude)
     : Booking(id, price, fromDate, toDate)
     , fromDest(fromDest)
     , toDest(toDest)
     , airline(airline)
     , bookingClass(bookingClass)
+    , fromLatitude(fromLatitude)
+    , fromLongitude(fromLongitude)
+    , toLatitude(toLatitude)
+    , toLongitude(toLongitude)
 {}
 
 // Startflughafen

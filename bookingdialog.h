@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include "booking.h"
+#include "travelagency.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -15,7 +16,7 @@ class BookingDetailDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit BookingDetailDialog(QWidget *parent = nullptr);
+    explicit BookingDetailDialog(TravelAgency *agency, QWidget *parent = nullptr);
     ~BookingDetailDialog();
 
     void setBooking(Booking *booking);
@@ -26,11 +27,13 @@ protected:
 
 private:
     Ui::BookingDetailDialog *ui;
+    TravelAgency *agency = nullptr;
     Booking *currentBooking = nullptr;
     bool changed = false;
 
 private slots:
     void onFieldModified();
+    void onIataCodeChanged(const QString &);
 };
 
 #endif // BOOKINGDETAILDIALOG_H
