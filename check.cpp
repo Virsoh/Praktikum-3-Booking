@@ -67,3 +67,8 @@ void Check::performChecks() const
 
     qDebug() << "Loaded bookings:" << agency->getBookings().size();
 }
+
+void Check::operator()() const
+{
+    performChecks();
+}

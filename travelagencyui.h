@@ -78,12 +78,16 @@ private:
     void showTravelDetails(std::shared_ptr<Travel> travel);
     void updateMapForTravel(std::shared_ptr<Travel> travel);
 
+signals:
+    void bookingsChanged();
+
 private slots:
     void on_actionDateiOeffnenClicked();
     void on_actionEintragssucheClicked();
     void on_actionSpeichernTriggered();
     void onCustomerTableDoubleClicked(QTableWidgetItem *item);
     void onTravelTableDoubleClicked(QTableWidgetItem *item);
+    void onBookingsChanged();
 };
 
 #endif // TRAVELAGENCYUI_H

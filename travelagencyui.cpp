@@ -66,6 +66,8 @@ TravelAgencyUI::TravelAgencyUI(std::shared_ptr<TravelAgency> agency, QWidget *pa
             &QTableWidget::itemDoubleClicked,
             this,
             &TravelAgencyUI::onCustomerTableDoubleClicked);
+
+    connect(this, &TravelAgencyUI::bookingsChanged, this, &TravelAgencyUI::onBookingsChanged);
 }
 
 
@@ -246,6 +248,7 @@ void TravelAgencyUI::onCustomerTableDoubleClicked(QTableWidgetItem *item)
         ui->actionSpeichern->setEnabled(true);
         if (currentTravel)
             zeigeBuchungenZurReise(currentTravel);
+        emit bookingsChanged();
     }
 // Beim Klick auf eine Reise deren Buchungen laden
 
@@ -396,4 +399,10 @@ void TravelAgencyUI::updateMapForTravel(std::shared_ptr<Travel> travel)
     QDesktopServices::openUrl(url);
 
 
+}
+
+void TravelAgencyUI::onBookingsChanged()
+{
+    if (checker)
+        (*checker)();
 }
