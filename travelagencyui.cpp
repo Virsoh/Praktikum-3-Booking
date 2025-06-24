@@ -17,7 +17,8 @@
 #include "travel.h"
 #include "ui_travelagencyui.h"
 #include <memory>
-#include <QWebEngineView>
+#include <QDesktopServices>
+#include <QUrl>
 #include "json.hpp"
 
 // Hauptfenster einrichten
@@ -328,7 +329,7 @@ void TravelAgencyUI::on_actionSpeichernTriggered()
 
 void TravelAgencyUI::updateMapForTravel(std::shared_ptr<Travel> travel)
 {
-    if (!travel || !ui->webViewMap)
+    if (!travel)
         return;
 
     using json = nlohmann::json;
@@ -391,25 +392,8 @@ void TravelAgencyUI::updateMapForTravel(std::shared_ptr<Travel> travel)
 
     QString geoJson = QString::fromStdString(featureCollection.dump());
 
-    QString html = R"(<html>
-        <head>
-            <meta charset='utf-8'>
-            <link rel='stylesheet' href='https://unpkg.com/leaflet@1.7.1/dist/leaflet.css'/>
-            <script src='https://unpkg.com/leaflet@1.7.1/dist/leaflet.js'></script>
-        </head>
-        <body style='margin:0'>
-        <div id='map' style='width:100%;height:100%'></div>
-        <script>
-            var map = L.map('map').setView([0,0], 2);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
-            var data = GEOJSON;
-            var layer = L.geoJSON(data).addTo(map);
-            if (layer.getLayers().length)
-                map.fitBounds(layer.getBounds());
-        </script>
-        </body>
-        </html>)";
-
-    html.replace("GEOJSON", geoJson);
-    ui->webViewMap->setHtml(html);
+    QString encoded = QUrl::toPercentEncoding(geoJson);
+    QUrl url(QStringLiteral("https://geojson.io/#data=data:application/json,%1")
+                 .arg(QString::fromLatin1(encoded)));
+    QDesktopServices::openUrl(url);
 }
