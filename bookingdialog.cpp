@@ -1,9 +1,9 @@
 #include "bookingdialog.h"
 #include "flightbooking.h"
-#include "travelagency.h"
 #include "hotelbooking.h"
 #include "rentalcarreservation.h"
 #include "trainticket.h"
+#include "travelagency.h"
 #include "ui_bookingdialog.h"
 #include <memory>
 
@@ -11,25 +11,10 @@
 #include <QDialogButtonBox>
 #include <QPushButton>
 
-// Dialog 
-
 BookingDetailDialog::BookingDetailDialog(std::shared_ptr<TravelAgency> agency, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::BookingDetailDialog)
     , agency(std::move(agency))
-
-
-BookingDetailDialog::BookingDetailDialog(std::shared_ptr<TravelAgency> agency, QWidget *parent)
-    : QDialog(parent)
-    , ui(new Ui::BookingDetailDialog)
-    , agency(std::move(agency))
-
-
-BookingDetailDialog::BookingDetailDialog(TravelAgency *agency, QWidget *parent)
-    : QDialog(parent)
-    , ui(new Ui::BookingDetailDialog)
-    , agency(agency)
-
 {
     ui->setupUi(this);
 
@@ -42,13 +27,11 @@ BookingDetailDialog::BookingDetailDialog(TravelAgency *agency, QWidget *parent)
     connect(ui->doubleSpinBoxPrice, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &BookingDetailDialog::onFieldModified);
 }
 
-// UI destruktor
 BookingDetailDialog::~BookingDetailDialog()
 {
     delete ui;
 }
 
-// Buchungsinformationen laden
 void BookingDetailDialog::setBooking(std::shared_ptr<Booking> booking)
 {
     if (!booking)
@@ -71,7 +54,6 @@ void BookingDetailDialog::setBooking(std::shared_ptr<Booking> booking)
 
         ui->listWidgetDetails->clear();
 
-        // buchungs codes übersetzen
         const QString &classCode = train->getBookingClass();
         QString classDesc;
         if (classCode == "SSP1")
@@ -163,16 +145,13 @@ void BookingDetailDialog::setBooking(std::shared_ptr<Booking> booking)
     } else if (auto *car = dynamic_cast<RentalCarReservation *>(booking.get())) {
         ui->lineEditExtra1->setPlaceholderText("Abholung");
         ui->lineEditExtra1->setText(car->getPickupLocation());
-        ui->lineEditExtra2->setPlaceholderText("Rückgabe");
+        ui->lineEditExtra2->setPlaceholderText("R\303\274ckgabe");
         ui->lineEditExtra2->setText(car->getReturnLocation());
 
         ui->listWidgetDetails->clear();
         ui->listWidgetDetails->addItem("Firma: " + car->getCompany());
     }
 }
-
-
-// bei änderung Speichern-Button aktivieren
 
 void BookingDetailDialog::onFieldModified()
 {
@@ -208,7 +187,6 @@ void BookingDetailDialog::onIataCodeChanged(const QString &)
         target->setText("Ung\303\274ltiger Iata-Code");
     }
 }
-// Änderungen zurück in das Objekt schreiben
 
 void BookingDetailDialog::accept()
 {

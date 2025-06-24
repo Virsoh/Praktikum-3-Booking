@@ -31,12 +31,6 @@ TravelAgencyUI::TravelAgencyUI(std::shared_ptr<TravelAgency> agency,
     , agency(std::move(agency))
     , checker(std::move(checker))
 
-// Hauptfenster einrichten
-TravelAgencyUI::TravelAgencyUI(std::shared_ptr<TravelAgency> agency, QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::TravelAgencyUI)
-    , agency(std::move(agency))
-
 {
     ui->setupUi(this);
     setupUI();
