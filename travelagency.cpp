@@ -160,6 +160,7 @@ void TravelAgency::readFile(const std::string &filename)
                                                         toLat,
                                                         toLon);
 
+
                 booking = new FlightBooking(bookingId,
                                             price,
                                             fromDate,
@@ -198,7 +199,6 @@ void TravelAgency::readFile(const std::string &filename)
                 booking = new HotelBooking(bookingId, price, fromDate, toDate, hotel, town, roomType, lat, lon);
 
 
-
             } else if (type == "Rental" || type == "RentalCar") {
                 QString pickup = QString::fromStdString(entry["pickupLocation"]);
                 QString retLoc = QString::fromStdString(entry["returnLocation"]);
@@ -229,6 +229,7 @@ void TravelAgency::readFile(const std::string &filename)
                                                                returnLon);
 
 
+
                 booking = new RentalCarReservation(bookingId,
                                                    price,
                                                    fromDate,
@@ -241,6 +242,7 @@ void TravelAgency::readFile(const std::string &filename)
                                                    pickupLon,
                                                    returnLat,
                                                    returnLon);
+
 
 
 
@@ -302,6 +304,7 @@ void TravelAgency::readFile(const std::string &filename)
                                           fromLon,
                                           toLat,
                                           toLon);
+
 
             }
 

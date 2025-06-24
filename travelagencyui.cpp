@@ -15,10 +15,22 @@
 #include "rentalcarreservation.h"
 #include "trainticket.h"
 #include "travel.h"
+#include "check.h"
 #include "ui_travelagencyui.h"
 #include <memory>
 #include <QDesktopServices>
 #include <QUrl>
+#include "json.hpp"
+
+// Hauptfenster einrichten
+TravelAgencyUI::TravelAgencyUI(std::shared_ptr<TravelAgency> agency,
+                               std::shared_ptr<Check> checker,
+                               QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::TravelAgencyUI)
+    , agency(std::move(agency))
+    , checker(std::move(checker))
+
 #include <QWebEngineView>
 #include "json.hpp"
 
@@ -27,6 +39,7 @@ TravelAgencyUI::TravelAgencyUI(std::shared_ptr<TravelAgency> agency, QWidget *pa
     : QMainWindow(parent)
     , ui(new Ui::TravelAgencyUI)
     , agency(std::move(agency))
+
 {
     ui->setupUi(this);
     setupUI();
@@ -76,6 +89,8 @@ void TravelAgencyUI::on_actionDateiOeffnenClicked()
 
     try {
         agency->readFile(filename.toStdString());
+        if (checker)
+            checker->performChecks();
         QMessageBox::information(this,
                                  "Datei geladen",
                                  QString("%1 Buchungen, %2 Reisen, %3 Kunden eingelesen.")
@@ -318,7 +333,11 @@ void TravelAgencyUI::updateMapForTravel(std::shared_ptr<Travel> travel)
 
     if (!travel)
 
+
+    if (!travel)
+
     if (!travel || !ui->webViewMap)
+
 
         return;
 
@@ -382,11 +401,11 @@ void TravelAgencyUI::updateMapForTravel(std::shared_ptr<Travel> travel)
 
     QString geoJson = QString::fromStdString(featureCollection.dump());
 
-
     QString encoded = QUrl::toPercentEncoding(geoJson);
     QUrl url(QStringLiteral("https://geojson.io/#data=data:application/json,%1")
                  .arg(QString::fromLatin1(encoded)));
     QDesktopServices::openUrl(url);
+
 
     QString html = R"(<html>
         <head>
@@ -409,5 +428,6 @@ void TravelAgencyUI::updateMapForTravel(std::shared_ptr<Travel> travel)
 
     html.replace("GEOJSON", geoJson);
     ui->webViewMap->setHtml(html);
+
 
 }

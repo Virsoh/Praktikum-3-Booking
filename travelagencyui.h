@@ -23,6 +23,10 @@
 #include "customer.h"
 #include "travel.h"
 #include "travelagency.h"
+
+#include "check.h"
+
+
 #include <memory>
 
 QT_BEGIN_NAMESPACE
@@ -36,7 +40,12 @@ class TravelAgencyUI : public QMainWindow
     Q_OBJECT
 
 public:
+    TravelAgencyUI(std::shared_ptr<TravelAgency> agency,
+                   std::shared_ptr<Check> checker,
+                   QWidget *parent = nullptr);
+
     TravelAgencyUI(std::shared_ptr<TravelAgency> agency, QWidget *parent = nullptr);
+
     ~TravelAgencyUI();
     bool showCustomerIdDialog(QString &idOut);
     void zeigeReisenDesKunden(std::shared_ptr<Customer> kunde);
@@ -45,6 +54,9 @@ public:
 private:
     Ui::TravelAgencyUI *ui;
     std::shared_ptr<TravelAgency> agency;
+
+    std::shared_ptr<Check> checker;
+
 
     // UI Components
     QTableWidget *customerTable;

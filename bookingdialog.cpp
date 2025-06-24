@@ -19,6 +19,12 @@ BookingDetailDialog::BookingDetailDialog(std::shared_ptr<TravelAgency> agency, Q
     , agency(std::move(agency))
 
 
+BookingDetailDialog::BookingDetailDialog(std::shared_ptr<TravelAgency> agency, QWidget *parent)
+    : QDialog(parent)
+    , ui(new Ui::BookingDetailDialog)
+    , agency(std::move(agency))
+
+
 BookingDetailDialog::BookingDetailDialog(TravelAgency *agency, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::BookingDetailDialog)
