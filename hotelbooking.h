@@ -9,6 +9,8 @@ private:
     QString hotel;
     QString town;
     QString roomType;
+    double latitude = 0.0;
+    double longitude = 0.0;
 
 public:
     HotelBooking(const QString &id,
@@ -17,11 +19,15 @@ public:
                  const QDate &toDate,
                  const QString &hotel,
                  const QString &town,
-                 const QString &roomType);
+                 const QString &roomType,
+                 double latitude = 0.0,
+                 double longitude = 0.0);
 
     QString getHotel() const;
     QString getTown() const;
     QString getRoomType() const;
+    double getLatitude() const { return latitude; }
+    double getLongitude() const { return longitude; }
     void setHotel(const QString &h);
     void setTown(const QString &t);
     void setRoomType(const QString &rt);

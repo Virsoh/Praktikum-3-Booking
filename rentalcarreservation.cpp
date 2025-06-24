@@ -8,12 +8,20 @@ RentalCarReservation::RentalCarReservation(QString id,
                                            const QString &pickupLocation,
                                            const QString &returnLocation,
                                            const QString &company,
-                                           const QString &carType)
+                                           const QString &carType,
+                                           double pickupLatitude,
+                                           double pickupLongitude,
+                                           double returnLatitude,
+                                           double returnLongitude)
     : Booking(id, price, fromDate, toDate)
     , pickupLocation(pickupLocation)
     , returnLocation(returnLocation)
     , company(company)
     , carType(carType)
+    , pickupLatitude(pickupLatitude)
+    , pickupLongitude(pickupLongitude)
+    , returnLatitude(returnLatitude)
+    , returnLongitude(returnLongitude)
 {}
 
 // Ort der Abholung
