@@ -298,7 +298,7 @@ void TravelAgency::writeFile(const std::string &filename) const
         entry["toDate"] = booking->getToDate().toString("yyyyMMdd").toStdString();
 
         // Buchungstyp-spezifisch ergänzen
-        if (const FlightBooking *fb = dynamic_cast<const FlightBooking *>(booking)) {
+        if (const FlightBooking *fb = dynamic_cast<const FlightBooking *>(booking.get())) {
             entry["type"] = "Flight";
             entry["fromDest"] = fb->getFromDest().toStdString();
             entry["toDest"] = fb->getToDest().toStdString();
@@ -309,7 +309,7 @@ void TravelAgency::writeFile(const std::string &filename) const
             entry["toDestLatitude"] = fb->getToLatitude();
             entry["toDestLongitude"] = fb->getToLongitude();
 
-        } else if (const HotelBooking *hb = dynamic_cast<const HotelBooking *>(booking)) {
+        } else if (const HotelBooking *hb = dynamic_cast<const HotelBooking *>(booking.get())) {
             entry["type"] = "Hotel";
             entry["hotel"] = hb->getHotel().toStdString();
             entry["town"] = hb->getTown().toStdString();
@@ -318,7 +318,7 @@ void TravelAgency::writeFile(const std::string &filename) const
             entry["longitude"] = hb->getLongitude();
 
         } else if (const RentalCarReservation *rc = dynamic_cast<const RentalCarReservation *>(
-                       booking)) {
+                         booking.get())) {
             entry["type"] = "Rental";
             entry["pickupLocation"] = rc->getPickupLocation().toStdString();
             entry["returnLocation"] = rc->getReturnLocation().toStdString();
@@ -329,7 +329,7 @@ void TravelAgency::writeFile(const std::string &filename) const
             entry["returnLatitude"] = rc->getReturnLatitude();
             entry["returnLongitude"] = rc->getReturnLongitude();
 
-        } else if (const TrainTicket *tt = dynamic_cast<const TrainTicket *>(booking)) {
+        } else if (const TrainTicket *tt = dynamic_cast<const TrainTicket *>(booking.get())) {
             entry["type"] = "Train";
             entry["fromStation"] = tt->getFromStation().toStdString();
             entry["toStation"] = tt->getToStation().toStdString();
