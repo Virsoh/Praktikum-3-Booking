@@ -16,8 +16,6 @@ int main(int argc, char *argv[])
     auto checker = std::make_shared<Check>(agency);
     TravelAgencyUI ui(agency, checker);
 
-    TravelAgencyUI ui(agency);
-
     ui.show();
 
     return app.exec();

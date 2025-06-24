@@ -161,18 +161,6 @@ void TravelAgency::readFile(const std::string &filename)
                                                         toLon);
 
 
-                booking = new FlightBooking(bookingId,
-                                            price,
-                                            fromDate,
-                                            toDate,
-                                            fromDest,
-                                            toDest,
-                                            airline,
-                                            bookingClass,
-                                            fromLat,
-                                            fromLon,
-                                            toLat,
-                                            toLon);
 
 
 
@@ -196,7 +184,6 @@ void TravelAgency::readFile(const std::string &filename)
                                                         lon);
 
 
-                booking = new HotelBooking(bookingId, price, fromDate, toDate, hotel, town, roomType, lat, lon);
 
 
             } else if (type == "Rental" || type == "RentalCar") {
@@ -230,18 +217,6 @@ void TravelAgency::readFile(const std::string &filename)
 
 
 
-                booking = new RentalCarReservation(bookingId,
-                                                   price,
-                                                   fromDate,
-                                                   toDate,
-                                                   pickup,
-                                                   retLoc,
-                                                   company,
-                                                   carType,
-                                                   pickupLat,
-                                                   pickupLon,
-                                                   returnLat,
-                                                   returnLon);
 
 
 
@@ -290,20 +265,6 @@ void TravelAgency::readFile(const std::string &filename)
                                                       toLon);
 
 
-                booking = new TrainTicket(bookingId,
-                                          price,
-                                          fromDate,
-                                          toDate,
-                                          fromStation,
-                                          toStation,
-                                          depTime,
-                                          arrTime,
-                                          bookingClass,
-                                          stops,
-                                          fromLat,
-                                          fromLon,
-                                          toLat,
-                                          toLon);
 
 
             }
