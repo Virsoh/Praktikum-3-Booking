@@ -189,13 +189,13 @@ void TravelAgencyUI::zeigeBuchungenZurReise(std::shared_ptr<Travel> reise)
         ui->customerTable->insertRow(row);
 
         QIcon icon;
-        if (dynamic_cast<FlightBooking *>(b))
+        if (dynamic_cast<FlightBooking *>(b.get()))
             icon = QIcon(":/icons/icons/flug.png");
-        else if (dynamic_cast<HotelBooking *>(b))
+        else if (dynamic_cast<HotelBooking *>(b.get()))
             icon = QIcon(":/icons/icons/hotel.png");
-        else if (dynamic_cast<RentalCarReservation *>(b))
+        else if (dynamic_cast<RentalCarReservation *>(b.get()))
             icon = QIcon(":/icons/icons/auto.png");
-        else if (dynamic_cast<TrainTicket *>(b))
+        else if (dynamic_cast<TrainTicket *>(b.get()))
             icon = QIcon(":/icons/icons/zug.png");
 
 
@@ -244,10 +244,6 @@ void TravelAgencyUI::onCustomerTableDoubleClicked(QTableWidgetItem *item)
             zeigeBuchungenZurReise(currentTravel);
         emit bookingsChanged();
     }
-// Beim Klick auf eine Reise deren Buchungen laden
-
-
-    dlg.exec();
 
 }
 void TravelAgencyUI::onTravelTableDoubleClicked(QTableWidgetItem *item)
