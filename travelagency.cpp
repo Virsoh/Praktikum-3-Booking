@@ -11,6 +11,7 @@
 #include "trainticket.h"
 #include "airport.h"
 #include <memory>
+
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -146,6 +147,7 @@ void TravelAgency::readFile(const std::string &filename)
                 double fromLon = entry.contains("fromDestLongitude") ? entry["fromDestLongitude"].get<double>() : 0.0;
                 double toLat = entry.contains("toDestLatitude") ? entry["toDestLatitude"].get<double>() : 0.0;
                 double toLon = entry.contains("toDestLongitude") ? entry["toDestLongitude"].get<double>() : 0.0;
+
                 booking = std::make_shared<FlightBooking>(bookingId,
                                                         price,
                                                         fromDate,
@@ -158,6 +160,19 @@ void TravelAgency::readFile(const std::string &filename)
                                                         fromLon,
                                                         toLat,
                                                         toLon);
+                booking = new FlightBooking(bookingId,
+                                            price,
+                                            fromDate,
+                                            toDate,
+                                            fromDest,
+                                            toDest,
+                                            airline,
+                                            bookingClass,
+                                            fromLat,
+                                            fromLon,
+                                            toLat,
+                                            toLon);
+
 
             } else if (type == "Hotel") {
                 QString hotel = QString::fromStdString(entry["hotel"]);
@@ -167,6 +182,7 @@ void TravelAgency::readFile(const std::string &filename)
                                        : "Standard";
                 double lat = entry.contains("latitude") ? entry["latitude"].get<double>() : 0.0;
                 double lon = entry.contains("longitude") ? entry["longitude"].get<double>() : 0.0;
+
                 booking = std::make_shared<HotelBooking>(bookingId,
                                                         price,
                                                         fromDate,
@@ -176,6 +192,9 @@ void TravelAgency::readFile(const std::string &filename)
                                                         roomType,
                                                         lat,
                                                         lon);
+
+                booking = new HotelBooking(bookingId, price, fromDate, toDate, hotel, town, roomType, lat, lon);
+
 
             } else if (type == "Rental" || type == "RentalCar") {
                 QString pickup = QString::fromStdString(entry["pickupLocation"]);
@@ -192,6 +211,7 @@ void TravelAgency::readFile(const std::string &filename)
                 double pickupLon = entry.contains("pickupLongitude") ? entry["pickupLongitude"].get<double>() : 0.0;
                 double returnLat = entry.contains("returnLatitude") ? entry["returnLatitude"].get<double>() : 0.0;
                 double returnLon = entry.contains("returnLongitude") ? entry["returnLongitude"].get<double>() : 0.0;
+
                 booking = std::make_shared<RentalCarReservation>(bookingId,
                                                                price,
                                                                fromDate,
@@ -204,6 +224,20 @@ void TravelAgency::readFile(const std::string &filename)
                                                                pickupLon,
                                                                returnLat,
                                                                returnLon);
+
+                booking = new RentalCarReservation(bookingId,
+                                                   price,
+                                                   fromDate,
+                                                   toDate,
+                                                   pickup,
+                                                   retLoc,
+                                                   company,
+                                                   carType,
+                                                   pickupLat,
+                                                   pickupLon,
+                                                   returnLat,
+                                                   returnLon);
+
 
             } else if (type == "Train") {
                 QString fromStation = QString::fromStdString(entry["fromStation"]);
@@ -232,6 +266,7 @@ void TravelAgency::readFile(const std::string &filename)
                 double fromLon = entry.contains("fromStationLongitude") ? entry["fromStationLongitude"].get<double>() : 0.0;
                 double toLat = entry.contains("toStationLatitude") ? entry["toStationLatitude"].get<double>() : 0.0;
                 double toLon = entry.contains("toStationLongitude") ? entry["toStationLongitude"].get<double>() : 0.0;
+
                 booking = std::make_shared<TrainTicket>(bookingId,
                                                       price,
                                                       fromDate,
@@ -246,6 +281,22 @@ void TravelAgency::readFile(const std::string &filename)
                                                       fromLon,
                                                       toLat,
                                                       toLon);
+
+                booking = new TrainTicket(bookingId,
+                                          price,
+                                          fromDate,
+                                          toDate,
+                                          fromStation,
+                                          toStation,
+                                          depTime,
+                                          arrTime,
+                                          bookingClass,
+                                          stops,
+                                          fromLat,
+                                          fromLon,
+                                          toLat,
+                                          toLon);
+
             }
 
             if (booking) {
