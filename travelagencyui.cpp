@@ -16,12 +16,15 @@
 #include "trainticket.h"
 #include "travel.h"
 #include "ui_travelagencyui.h"
+#include <memory>
+#include <QWebEngineView>
+#include "json.hpp"
 
 // Hauptfenster einrichten
-TravelAgencyUI::TravelAgencyUI(TravelAgency *agency, QWidget *parent)
+TravelAgencyUI::TravelAgencyUI(std::shared_ptr<TravelAgency> agency, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::TravelAgencyUI)
-    , agency(agency)
+    , agency(std::move(agency))
 {
     ui->setupUi(this);
     setupUI();
@@ -92,7 +95,7 @@ void TravelAgencyUI::on_actionEintragssucheClicked()
     if (!showCustomerIdDialog(customerId))
         return;
 
-    Customer *customer = agency->findCustomerById(customerId);
+    auto customer = agency->findCustomerById(customerId);
     if (!customer) {
         QMessageBox::warning(this, "Nicht gefunden", "Kein Kunde mit dieser ID gefunden.");
         return;
@@ -128,18 +131,18 @@ bool TravelAgencyUI::showCustomerIdDialog(QString &idOut)
 }
 
 // füllt die Tabelle mit den Reisen
-void TravelAgencyUI::zeigeReisenDesKunden(Customer *kunde)
+void TravelAgencyUI::zeigeReisenDesKunden(std::shared_ptr<Customer> kunde)
 {
     ui->reiseTable->clear();
     ui->reiseTable->setRowCount(0);
     ui->reiseTable->setColumnCount(3);
     ui->reiseTable->setHorizontalHeaderLabels({"Reise-ID", "Beginn der Reise", "Ende der Reise"});
 
-    for (Travel *travel : kunde->getTravelList()) {
+    for (const auto &travel : kunde->getTravelList()) {
         QDate start = QDate::fromString("99991231", "yyyyMMdd");
         QDate end = QDate::fromString("00010101", "yyyyMMdd");
 
-        for (Booking *b : travel->getTravelBookings()) {
+        for (const auto &b : travel->getTravelBookings()) {
             if (b->getFromDate() < start)
                 start = b->getFromDate();
             if (b->getToDate() > end)
@@ -158,7 +161,7 @@ void TravelAgencyUI::zeigeReisenDesKunden(Customer *kunde)
 
 
 // zeigt alle Buchungen einer Reise an
-void TravelAgencyUI::zeigeBuchungenZurReise(Travel *reise)
+void TravelAgencyUI::zeigeBuchungenZurReise(std::shared_ptr<Travel> reise)
 {
     if (!reise || !ui->customerTable)
         return;
@@ -171,7 +174,7 @@ void TravelAgencyUI::zeigeBuchungenZurReise(Travel *reise)
     ui->customerTable->setHorizontalHeaderLabels({"Buchung", "Start", "Ende", "Preis"});
 
     const auto &buchungen = reise->getTravelBookings();
-    for (Booking *b : buchungen) {
+    for (const auto &b : buchungen) {
         int row = ui->customerTable->rowCount();
         ui->customerTable->insertRow(row);
 
@@ -204,7 +207,7 @@ void TravelAgencyUI::zeigeBuchungenZurReise(Travel *reise)
 
         QTableWidgetItem *iconItem = new QTableWidgetItem;
         iconItem->setIcon(icon);
-        iconItem->setData(Qt::UserRole, QVariant::fromValue(quintptr(b)));
+        iconItem->setData(Qt::UserRole, b->getId());
         ui->customerTable->setItem(row, 0, iconItem);
         ui->customerTable->setItem(
             row, 1, new QTableWidgetItem(b->getFromDate().toString("dd.MM.yyyy")));
@@ -217,6 +220,8 @@ void TravelAgencyUI::zeigeBuchungenZurReise(Travel *reise)
     }
 
     ui->customerTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+
+    updateMapForTravel(reise);
 }
 
 // Detaildialog für eine Buchung öffnen
@@ -230,8 +235,8 @@ void TravelAgencyUI::onCustomerTableDoubleClicked(QTableWidgetItem *item)
     if (!idItem)
         return;
 
-    Booking *booking = reinterpret_cast<Booking *>(
-        idItem->data(Qt::UserRole).value<quintptr>());
+    QString bookingId = idItem->data(Qt::UserRole).toString();
+    auto booking = agency->findBookingById(bookingId);
     if (!booking)
         return;
 
@@ -257,7 +262,7 @@ void TravelAgencyUI::onTravelTableDoubleClicked(QTableWidgetItem *item)
     QString travelId = ui->reiseTable->item(row, 0)->text();
 
 
-    Travel *travel = agency->findTravelById(travelId);
+    auto travel = agency->findTravelById(travelId);
     if (!travel)
         return;
 
@@ -285,7 +290,7 @@ void TravelAgencyUI::clearTables()
 }
 
 // Kundendaten in die Felder schreiben
-void TravelAgencyUI::showCustomerInfo(Customer *customer)
+void TravelAgencyUI::showCustomerInfo(std::shared_ptr<Customer> customer)
 {
     if (!customer)
         return;
@@ -295,7 +300,7 @@ void TravelAgencyUI::showCustomerInfo(Customer *customer)
 }
 
 // zeigt Details einer Reise
-void TravelAgencyUI::showTravelDetails(Travel *travel)
+void TravelAgencyUI::showTravelDetails(std::shared_ptr<Travel> travel)
 {
     if (!travel)
         return;
@@ -319,4 +324,92 @@ void TravelAgencyUI::on_actionSpeichernTriggered()
     } catch (const std::exception &e) {
         QMessageBox::critical(this, "Fehler", QString::fromStdString(e.what()));
     }
+}
+
+void TravelAgencyUI::updateMapForTravel(std::shared_ptr<Travel> travel)
+{
+    if (!travel || !ui->webViewMap)
+        return;
+
+    using json = nlohmann::json;
+
+    json featureCollection;
+    featureCollection["type"] = "FeatureCollection";
+    featureCollection["features"] = json::array();
+
+    for (const auto &b : travel->getTravelBookings()) {
+        if (auto *f = dynamic_cast<FlightBooking *>(b.get())) {
+            if (f->getFromLatitude() || f->getFromLongitude() || f->getToLatitude()
+                || f->getToLongitude()) {
+                json feat;
+                feat["type"] = "Feature";
+                feat["geometry"] = {
+                    {"type", "LineString"},
+                    {"coordinates",
+                     {{f->getFromLongitude(), f->getFromLatitude()},
+                      {f->getToLongitude(), f->getToLatitude()}}}
+                };
+                feat["properties"] = { {"booking", "flight"} };
+                featureCollection["features"].push_back(feat);
+            }
+        } else if (auto *h = dynamic_cast<HotelBooking *>(b.get())) {
+            json feat;
+            feat["type"] = "Feature";
+            feat["geometry"]
+                = { {"type", "Point"},
+                    {"coordinates", {h->getLongitude(), h->getLatitude()}} };
+            feat["properties"] = { {"booking", "hotel"} };
+            featureCollection["features"].push_back(feat);
+        } else if (auto *r = dynamic_cast<RentalCarReservation *>(b.get())) {
+            json pick;
+            pick["type"] = "Feature";
+            pick["geometry"] = { {"type", "Point"},
+                                 {"coordinates",
+                                  {r->getPickupLongitude(), r->getPickupLatitude()}} };
+            pick["properties"] = { {"booking", "rental"}, {"role", "pickup"} };
+            featureCollection["features"].push_back(pick);
+            json retF;
+            retF["type"] = "Feature";
+            retF["geometry"] = { {"type", "Point"},
+                                  {"coordinates",
+                                   {r->getReturnLongitude(), r->getReturnLatitude()}} };
+            retF["properties"] = { {"booking", "rental"}, {"role", "return"} };
+            featureCollection["features"].push_back(retF);
+        } else if (auto *t = dynamic_cast<TrainTicket *>(b.get())) {
+            json feat;
+            feat["type"] = "Feature";
+            feat["geometry"] = {
+                {"type", "LineString"},
+                {"coordinates",
+                 {{t->getFromLongitude(), t->getFromLatitude()},
+                  {t->getToLongitude(), t->getToLatitude()}}}
+            };
+            feat["properties"] = { {"booking", "train"} };
+            featureCollection["features"].push_back(feat);
+        }
+    }
+
+    QString geoJson = QString::fromStdString(featureCollection.dump());
+
+    QString html = R"(<html>
+        <head>
+            <meta charset='utf-8'>
+            <link rel='stylesheet' href='https://unpkg.com/leaflet@1.7.1/dist/leaflet.css'/>
+            <script src='https://unpkg.com/leaflet@1.7.1/dist/leaflet.js'></script>
+        </head>
+        <body style='margin:0'>
+        <div id='map' style='width:100%;height:100%'></div>
+        <script>
+            var map = L.map('map').setView([0,0], 2);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
+            var data = GEOJSON;
+            var layer = L.geoJSON(data).addTo(map);
+            if (layer.getLayers().length)
+                map.fitBounds(layer.getBounds());
+        </script>
+        </body>
+        </html>)";
+
+    html.replace("GEOJSON", geoJson);
+    ui->webViewMap->setHtml(html);
 }

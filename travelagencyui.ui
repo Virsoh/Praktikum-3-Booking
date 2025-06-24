@@ -129,6 +129,16 @@
      <string>Buchungen:</string>
     </property>
    </widget>
+   <widget class="QWebEngineView" name="webViewMap">
+    <property name="geometry">
+     <rect>
+      <x>120</x>
+      <y>510</y>
+      <width>411</width>
+      <height>80</height>
+     </rect>
+    </property>
+   </widget>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QMenuBar" name="menuBar">

@@ -19,9 +19,11 @@
 #include <QTableWidgetItem>
 #include <QToolBar>
 #include <QVBoxLayout>
+#include <QWebEngineView>
 #include "customer.h"
 #include "travel.h"
 #include "travelagency.h"
+#include <memory>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -34,15 +36,15 @@ class TravelAgencyUI : public QMainWindow
     Q_OBJECT
 
 public:
-    TravelAgencyUI(TravelAgency *agency, QWidget *parent = nullptr);
+    TravelAgencyUI(std::shared_ptr<TravelAgency> agency, QWidget *parent = nullptr);
     ~TravelAgencyUI();
     bool showCustomerIdDialog(QString &idOut);
-    void zeigeReisenDesKunden(Customer *kunde);
-    void zeigeBuchungenZurReise(Travel *reise);
+    void zeigeReisenDesKunden(std::shared_ptr<Customer> kunde);
+    void zeigeBuchungenZurReise(std::shared_ptr<Travel> reise);
 
 private:
     Ui::TravelAgencyUI *ui;
-    TravelAgency *agency;
+    std::shared_ptr<TravelAgency> agency;
 
     // UI Components
     QTableWidget *customerTable;
@@ -56,13 +58,14 @@ private:
     QAction *actionSave;
 
     bool unsavedChanges = false;
-    Travel *currentTravel = nullptr;
+    std::shared_ptr<Travel> currentTravel;
 
     void setupUI();
     void setupMenuAndToolbar();
     void clearTables();
-    void showCustomerInfo(Customer *customer);
-    void showTravelDetails(Travel *travel);
+    void showCustomerInfo(std::shared_ptr<Customer> customer);
+    void showTravelDetails(std::shared_ptr<Travel> travel);
+    void updateMapForTravel(std::shared_ptr<Travel> travel);
 
 private slots:
     void on_actionDateiOeffnenClicked();
