@@ -1,21 +1,26 @@
 #include "bookingdialog.h"
 #include "flightbooking.h"
+#include "travelagency.h"
 #include "hotelbooking.h"
 #include "rentalcarreservation.h"
 #include "trainticket.h"
 #include "ui_bookingdialog.h"
+#include <memory>
 
 #include <QDate>
 #include <QDialogButtonBox>
 #include <QPushButton>
 
 // Dialog 
-BookingDetailDialog::BookingDetailDialog(QWidget *parent)
+BookingDetailDialog::BookingDetailDialog(std::shared_ptr<TravelAgency> agency, QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::BookingDetailDialog)
+    , agency(std::move(agency))
 {
     ui->setupUi(this);
 
+    connect(ui->lineEditExtra1, &QLineEdit::textChanged, this, &BookingDetailDialog::onIataCodeChanged);
+    connect(ui->lineEditExtra2, &QLineEdit::textChanged, this, &BookingDetailDialog::onIataCodeChanged);
     connect(ui->lineEditExtra1, &QLineEdit::textChanged, this, &BookingDetailDialog::onFieldModified);
     connect(ui->lineEditExtra2, &QLineEdit::textChanged, this, &BookingDetailDialog::onFieldModified);
     connect(ui->dateEditFrom, &QDateEdit::dateChanged, this, &BookingDetailDialog::onFieldModified);
@@ -30,7 +35,7 @@ BookingDetailDialog::~BookingDetailDialog()
 }
 
 // Buchungsinformationen laden
-void BookingDetailDialog::setBooking(Booking *booking)
+void BookingDetailDialog::setBooking(std::shared_ptr<Booking> booking)
 {
     if (!booking)
         return;
@@ -44,7 +49,7 @@ void BookingDetailDialog::setBooking(Booking *booking)
     ui->dateEditTo->setDate(booking->getToDate());
     ui->doubleSpinBoxPrice->setValue(booking->getPrice());
 
-    if (auto *train = dynamic_cast<TrainTicket *>(booking)) {
+    if (auto *train = dynamic_cast<TrainTicket *>(booking.get())) {
         ui->lineEditExtra1->setPlaceholderText("Abfahrt von");
         ui->lineEditExtra1->setText(train->getFromStation());
         ui->lineEditExtra2->setPlaceholderText("Ankunft in");
@@ -76,11 +81,29 @@ void BookingDetailDialog::setBooking(Booking *booking)
             ui->listWidgetDetails->addItem(stop);
         }
 
-    } else if (auto *flight = dynamic_cast<FlightBooking *>(booking)) {
+    } else if (auto *flight = dynamic_cast<FlightBooking *>(booking.get())) {
         ui->lineEditExtra1->setPlaceholderText("Von Flughafen");
         ui->lineEditExtra1->setText(flight->getFromDest());
         ui->lineEditExtra2->setPlaceholderText("Nach Flughafen");
         ui->lineEditExtra2->setText(flight->getToDest());
+        if (agency) {
+            auto it = agency->getAirports().find(flight->getFromDest());
+            if (it != agency->getAirports().end()) {
+                ui->lineEditExtra1Name->setStyleSheet("");
+                ui->lineEditExtra1Name->setText(it.value()->getName());
+            } else {
+                ui->lineEditExtra1Name->setStyleSheet("color: red;");
+                ui->lineEditExtra1Name->setText("Ung\303\274ltiger Iata-Code");
+            }
+            it = agency->getAirports().find(flight->getToDest());
+            if (it != agency->getAirports().end()) {
+                ui->lineEditExtra2Name->setStyleSheet("");
+                ui->lineEditExtra2Name->setText(it.value()->getName());
+            } else {
+                ui->lineEditExtra2Name->setStyleSheet("color: red;");
+                ui->lineEditExtra2Name->setText("Ung\303\274ltiger Iata-Code");
+            }
+        }
 
         ui->listWidgetDetails->clear();
         ui->listWidgetDetails->addItem("Airline: " + flight->getAirline());
@@ -100,7 +123,7 @@ void BookingDetailDialog::setBooking(Booking *booking)
 
         ui->listWidgetDetails->addItem("Buchungsklasse: " + classDesc);
 
-    } else if (auto *hotel = dynamic_cast<HotelBooking *>(booking)) {
+    } else if (auto *hotel = dynamic_cast<HotelBooking *>(booking.get())) {
         ui->lineEditExtra1->setPlaceholderText("Hotel");
         ui->lineEditExtra1->setText(hotel->getHotel());
         ui->lineEditExtra2->setPlaceholderText("Ort");
@@ -123,7 +146,7 @@ void BookingDetailDialog::setBooking(Booking *booking)
 
         ui->listWidgetDetails->addItem("Zimmerkategorie: " + roomDesc);
 
-    } else if (auto *car = dynamic_cast<RentalCarReservation *>(booking)) {
+    } else if (auto *car = dynamic_cast<RentalCarReservation *>(booking.get())) {
         ui->lineEditExtra1->setPlaceholderText("Abholung");
         ui->lineEditExtra1->setText(car->getPickupLocation());
         ui->lineEditExtra2->setPlaceholderText("Rückgabe");
@@ -142,6 +165,35 @@ void BookingDetailDialog::onFieldModified()
     changed = true;
     ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
 }
+
+void BookingDetailDialog::onIataCodeChanged(const QString &)
+{
+    if (!agency)
+        return;
+
+    QLineEdit *src = qobject_cast<QLineEdit *>(sender());
+    if (!src)
+        return;
+
+    QLineEdit *target = nullptr;
+    if (src == ui->lineEditExtra1)
+        target = ui->lineEditExtra1Name;
+    else if (src == ui->lineEditExtra2)
+        target = ui->lineEditExtra2Name;
+
+    if (!target)
+        return;
+
+    QString code = src->text().trimmed().toUpper();
+    auto it = agency->getAirports().find(code);
+    if (it != agency->getAirports().end()) {
+        target->setStyleSheet("");
+        target->setText(it.value()->getName());
+    } else {
+        target->setStyleSheet("color: red;");
+        target->setText("Ung\303\274ltiger Iata-Code");
+    }
+}
 // Änderungen zurück in das Objekt schreiben
 
 void BookingDetailDialog::accept()
@@ -151,16 +203,16 @@ void BookingDetailDialog::accept()
         currentBooking->setFromDate(ui->dateEditFrom->date());
         currentBooking->setToDate(ui->dateEditTo->date());
 
-        if (auto *train = dynamic_cast<TrainTicket *>(currentBooking)) {
+        if (auto *train = dynamic_cast<TrainTicket *>(currentBooking.get())) {
             train->setFromStation(ui->lineEditExtra1->text());
             train->setToStation(ui->lineEditExtra2->text());
-        } else if (auto *flight = dynamic_cast<FlightBooking *>(currentBooking)) {
+        } else if (auto *flight = dynamic_cast<FlightBooking *>(currentBooking.get())) {
             flight->setFromDest(ui->lineEditExtra1->text());
             flight->setToDest(ui->lineEditExtra2->text());
-        } else if (auto *hotel = dynamic_cast<HotelBooking *>(currentBooking)) {
+        } else if (auto *hotel = dynamic_cast<HotelBooking *>(currentBooking.get())) {
             hotel->setHotel(ui->lineEditExtra1->text());
             hotel->setTown(ui->lineEditExtra2->text());
-        } else if (auto *car = dynamic_cast<RentalCarReservation *>(currentBooking)) {
+        } else if (auto *car = dynamic_cast<RentalCarReservation *>(currentBooking.get())) {
             car->setPickupLocation(ui->lineEditExtra1->text());
             car->setReturnLocation(ui->lineEditExtra2->text());
         }

@@ -14,6 +14,10 @@ private:
     QString arrivalTime;
     QString bookingClass;
     QVector<QString> stops;
+    double fromLatitude = 0.0;
+    double fromLongitude = 0.0;
+    double toLatitude = 0.0;
+    double toLongitude = 0.0;
 
 public:
     TrainTicket(QString id,
@@ -25,7 +29,11 @@ public:
                 const QString &departureTime,
                 const QString &arrivalTime,
                 const QString &bookingClass,
-                const QVector<QString> &stops);
+                const QVector<QString> &stops,
+                double fromLatitude = 0.0,
+                double fromLongitude = 0.0,
+                double toLatitude = 0.0,
+                double toLongitude = 0.0);
 
     QString getFromStation() const;
     QString getToStation() const;
@@ -33,6 +41,10 @@ public:
     QString getArrivalTime() const;
     QString getBookingClass() const;
     QVector<QString> getStops() const;
+    double getFromLatitude() const { return fromLatitude; }
+    double getFromLongitude() const { return fromLongitude; }
+    double getToLatitude() const { return toLatitude; }
+    double getToLongitude() const { return toLongitude; }
     void setFromStation(const QString &from);
     void setToStation(const QString &to);
     void setDepartureTime(const QString &t);

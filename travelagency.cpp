@@ -9,6 +9,8 @@
 #include "json.hpp"
 #include "rentalcarreservation.h"
 #include "trainticket.h"
+#include "airport.h"
+#include <memory>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -21,18 +23,19 @@ using namespace std;
 // gibt alle Buchungen frei
 TravelAgency::~TravelAgency()
 {
-    for (Booking *booking : bookings) {
-        delete booking;
-    }
     bookings.clear();
+    allTravels.clear();
+    allCustomers.clear();
+    airports.clear();
 }
 
 // leert die internen Listen
 void TravelAgency::reset()
 {
-    for (Booking *b : bookings)
-        delete b;
     bookings.clear();
+    allTravels.clear();
+    allCustomers.clear();
+    airports.clear();
 }
 
 // liest die JSON-Datei ein
@@ -103,34 +106,34 @@ void TravelAgency::readFile(const std::string &filename)
                 lastName = QString::fromStdString(entry["customerLastname"]);
 
             // Kunde suchen oder anlegen
-            Customer *customer = nullptr;
-            for (Customer *c : allCustomers) {
+            std::shared_ptr<Customer> customer;
+            for (const auto &c : allCustomers) {
                 if (c->getId() == customerId) {
                     customer = c;
                     break;
                 }
             }
             if (!customer) {
-                customer = new Customer(customerId, firstName, lastName);
+                customer = std::make_shared<Customer>(customerId, firstName, lastName);
                 allCustomers.append(customer);
             }
 
             // Reise suchen oder anlegen
-            Travel *travel = nullptr;
-            for (Travel *t : allTravels) {
+            std::shared_ptr<Travel> travel;
+            for (const auto &t : allTravels) {
                 if (t->getId() == travelId) {
                     travel = t;
                     break;
                 }
             }
             if (!travel) {
-                travel = new Travel(travelId);
+                travel = std::make_shared<Travel>(travelId);
                 allTravels.append(travel);
                 customer->addTravel(travel);
             }
 
             // Buchung erzeugen
-            Booking *booking = nullptr;
+            std::shared_ptr<Booking> booking;
 
             if (type == "Flight") {
                 QString fromDest = QString::fromStdString(entry["fromDest"]);
@@ -139,14 +142,22 @@ void TravelAgency::readFile(const std::string &filename)
                 QString bookingClass = entry.contains("bookingClass")
                                            ? QString::fromStdString(entry["bookingClass"])
                                            : "Y";
-                booking = new FlightBooking(bookingId,
-                                            price,
-                                            fromDate,
-                                            toDate,
-                                            fromDest,
-                                            toDest,
-                                            airline,
-                                            bookingClass);
+                double fromLat = entry.contains("fromDestLatitude") ? entry["fromDestLatitude"].get<double>() : 0.0;
+                double fromLon = entry.contains("fromDestLongitude") ? entry["fromDestLongitude"].get<double>() : 0.0;
+                double toLat = entry.contains("toDestLatitude") ? entry["toDestLatitude"].get<double>() : 0.0;
+                double toLon = entry.contains("toDestLongitude") ? entry["toDestLongitude"].get<double>() : 0.0;
+                booking = std::make_shared<FlightBooking>(bookingId,
+                                                        price,
+                                                        fromDate,
+                                                        toDate,
+                                                        fromDest,
+                                                        toDest,
+                                                        airline,
+                                                        bookingClass,
+                                                        fromLat,
+                                                        fromLon,
+                                                        toLat,
+                                                        toLon);
 
             } else if (type == "Hotel") {
                 QString hotel = QString::fromStdString(entry["hotel"]);
@@ -154,7 +165,17 @@ void TravelAgency::readFile(const std::string &filename)
                 QString roomType = entry.contains("roomType")
                                        ? QString::fromStdString(entry["roomType"])
                                        : "Standard";
-                booking = new HotelBooking(bookingId, price, fromDate, toDate, hotel, town, roomType);
+                double lat = entry.contains("latitude") ? entry["latitude"].get<double>() : 0.0;
+                double lon = entry.contains("longitude") ? entry["longitude"].get<double>() : 0.0;
+                booking = std::make_shared<HotelBooking>(bookingId,
+                                                        price,
+                                                        fromDate,
+                                                        toDate,
+                                                        hotel,
+                                                        town,
+                                                        roomType,
+                                                        lat,
+                                                        lon);
 
             } else if (type == "Rental" || type == "RentalCar") {
                 QString pickup = QString::fromStdString(entry["pickupLocation"]);
@@ -167,14 +188,22 @@ void TravelAgency::readFile(const std::string &filename)
                     carType = QString::fromStdString(entry["vehicleClass"]);
                 else
                     carType = "Standard";
-                booking = new RentalCarReservation(bookingId,
-                                                   price,
-                                                   fromDate,
-                                                   toDate,
-                                                   pickup,
-                                                   retLoc,
-                                                   company,
-                                                   carType);
+                double pickupLat = entry.contains("pickupLatitude") ? entry["pickupLatitude"].get<double>() : 0.0;
+                double pickupLon = entry.contains("pickupLongitude") ? entry["pickupLongitude"].get<double>() : 0.0;
+                double returnLat = entry.contains("returnLatitude") ? entry["returnLatitude"].get<double>() : 0.0;
+                double returnLon = entry.contains("returnLongitude") ? entry["returnLongitude"].get<double>() : 0.0;
+                booking = std::make_shared<RentalCarReservation>(bookingId,
+                                                               price,
+                                                               fromDate,
+                                                               toDate,
+                                                               pickup,
+                                                               retLoc,
+                                                               company,
+                                                               carType,
+                                                               pickupLat,
+                                                               pickupLon,
+                                                               returnLat,
+                                                               returnLon);
 
             } else if (type == "Train") {
                 QString fromStation = QString::fromStdString(entry["fromStation"]);
@@ -199,16 +228,24 @@ void TravelAgency::readFile(const std::string &filename)
                         stops.append(QString::fromStdString(s));
                     }
                 }
-                booking = new TrainTicket(bookingId,
-                                          price,
-                                          fromDate,
-                                          toDate,
-                                          fromStation,
-                                          toStation,
-                                          depTime,
-                                          arrTime,
-                                          bookingClass,
-                                          stops);
+                double fromLat = entry.contains("fromStationLatitude") ? entry["fromStationLatitude"].get<double>() : 0.0;
+                double fromLon = entry.contains("fromStationLongitude") ? entry["fromStationLongitude"].get<double>() : 0.0;
+                double toLat = entry.contains("toStationLatitude") ? entry["toStationLatitude"].get<double>() : 0.0;
+                double toLon = entry.contains("toStationLongitude") ? entry["toStationLongitude"].get<double>() : 0.0;
+                booking = std::make_shared<TrainTicket>(bookingId,
+                                                      price,
+                                                      fromDate,
+                                                      toDate,
+                                                      fromStation,
+                                                      toStation,
+                                                      depTime,
+                                                      arrTime,
+                                                      bookingClass,
+                                                      stops,
+                                                      fromLat,
+                                                      fromLon,
+                                                      toLat,
+                                                      toLon);
             }
 
             if (booking) {
@@ -223,7 +260,7 @@ void TravelAgency::readFile(const std::string &filename)
 }
 
 // Liste aller Buchungen
-const std::vector<Booking *> &TravelAgency::getBookings() const
+const std::vector<std::shared_ptr<Booking>> &TravelAgency::getBookings() const
 {
     return bookings;
 }
@@ -232,7 +269,7 @@ void TravelAgency::writeFile(const std::string &filename) const
 {
     json j;
 
-    for (const Booking *booking : bookings) {
+    for (const auto &booking : bookings) {
         json entry;
         entry["id"] = booking->getId().toStdString();
         entry["price"] = booking->getPrice();
@@ -246,12 +283,18 @@ void TravelAgency::writeFile(const std::string &filename) const
             entry["toDest"] = fb->getToDest().toStdString();
             entry["airline"] = fb->getAirline().toStdString();
             entry["bookingClass"] = fb->getBookingClass().toStdString();
+            entry["fromDestLatitude"] = fb->getFromLatitude();
+            entry["fromDestLongitude"] = fb->getFromLongitude();
+            entry["toDestLatitude"] = fb->getToLatitude();
+            entry["toDestLongitude"] = fb->getToLongitude();
 
         } else if (const HotelBooking *hb = dynamic_cast<const HotelBooking *>(booking)) {
             entry["type"] = "Hotel";
             entry["hotel"] = hb->getHotel().toStdString();
             entry["town"] = hb->getTown().toStdString();
             entry["roomType"] = hb->getRoomType().toStdString();
+            entry["latitude"] = hb->getLatitude();
+            entry["longitude"] = hb->getLongitude();
 
         } else if (const RentalCarReservation *rc = dynamic_cast<const RentalCarReservation *>(
                        booking)) {
@@ -260,6 +303,10 @@ void TravelAgency::writeFile(const std::string &filename) const
             entry["returnLocation"] = rc->getReturnLocation().toStdString();
             entry["company"] = rc->getCompany().toStdString();
             entry["carType"] = rc->getCarType().toStdString();
+            entry["pickupLatitude"] = rc->getPickupLatitude();
+            entry["pickupLongitude"] = rc->getPickupLongitude();
+            entry["returnLatitude"] = rc->getReturnLatitude();
+            entry["returnLongitude"] = rc->getReturnLongitude();
 
         } else if (const TrainTicket *tt = dynamic_cast<const TrainTicket *>(booking)) {
             entry["type"] = "Train";
@@ -268,6 +315,10 @@ void TravelAgency::writeFile(const std::string &filename) const
             entry["departureTime"] = tt->getDepartureTime().toStdString();
             entry["arrivalTime"] = tt->getArrivalTime().toStdString();
             entry["bookingClass"] = tt->getBookingClass().toStdString();
+            entry["fromStationLatitude"] = tt->getFromLatitude();
+            entry["fromStationLongitude"] = tt->getFromLongitude();
+            entry["toStationLatitude"] = tt->getToLatitude();
+            entry["toStationLongitude"] = tt->getToLongitude();
 
             std::vector<std::string> stops;
             for (const QString &stop : tt->getStops()) {
@@ -277,11 +328,11 @@ void TravelAgency::writeFile(const std::string &filename) const
         }
 
         // Reise und Kunde suchen (für travelId + Kundendaten)
-        for (Travel *travel : allTravels) {
+        for (const auto &travel : allTravels) {
             if (travel->containsBooking(booking)) {
                 entry["travelId"] = travel->getId().toStdString();
 
-                for (Customer *customer : allCustomers) {
+                for (const auto &customer : allCustomers) {
                     if (customer->containsTravel(travel)) {
                         entry["customerId"] = customer->getId().toStdString();
                         entry["firstName"] = customer->getFirstName().toStdString();
@@ -308,19 +359,19 @@ void TravelAgency::writeFile(const std::string &filename) const
     int rentalCount = 0;
     double totalValue = 0.0;
 
-    for (Booking *b : bookings) {
+    for (const auto &b : bookings) {
         totalValue += b->getPrice();
-        if (dynamic_cast<FlightBooking *>(b))
+        if (dynamic_cast<FlightBooking *>(b.get()))
             flightCount++;
-        else if (dynamic_cast<HotelBooking *>(b))
+        else if (dynamic_cast<HotelBooking *>(b.get()))
             hotelCount++;
-        else if (dynamic_cast<RentalCarReservation *>(b))
+        else if (dynamic_cast<RentalCarReservation *>(b.get()))
             rentalCount++;
     }
 
     // Reisen des Kunden mit ID 1
     int travelsOfCustomer1 = 0;
-    for (Customer *c : allCustomers) {
+    for (const auto &c : allCustomers) {
         if (c->getId() == "1") {
             travelsOfCustomer1 = c->getTravelList().size();
             break;
@@ -329,7 +380,7 @@ void TravelAgency::writeFile(const std::string &filename) const
 
     // Buchungen der Reise mit ID 17
     int bookingsOfTravel17 = 0;
-    for (Travel *t : allTravels) {
+    for (const auto &t : allTravels) {
         if (t->getId() == "17") {
             bookingsOfTravel17 = t->getTravelBookings().size();
             break;
@@ -359,7 +410,7 @@ void TravelAgency::writeFile(const std::string &filename) const
 // Platzhalter zum Bearbeiten einer Buchung
 void TravelAgency::editBooking(const QString &id)
 {
-    for (Booking *b : bookings) {
+    for (const auto &b : bookings) {
         if (b->getId() == id) {
             qDebug() << "Bearbeiten von Buchung mit ID:" << id;
             // Hier könnte später ein Dialog geöffnet werden
@@ -370,10 +421,19 @@ void TravelAgency::editBooking(const QString &id)
     qDebug() << "Keine Buchung mit ID" << id << "gefunden.";
 }
 
-// sucht einen Kunden nach ID
-Customer *TravelAgency::findCustomerById(const QString &id) const
+std::shared_ptr<Booking> TravelAgency::findBookingById(const QString &id) const
 {
-    for (Customer *c : allCustomers) {
+    for (const auto &b : bookings) {
+        if (b->getId() == id)
+            return b;
+    }
+    return nullptr;
+}
+
+// sucht einen Kunden nach ID
+std::shared_ptr<Customer> TravelAgency::findCustomerById(const QString &id) const
+{
+    for (const auto &c : allCustomers) {
         if (c->getId() == id)
             return c;
     }
@@ -381,11 +441,56 @@ Customer *TravelAgency::findCustomerById(const QString &id) const
 }
 
 // sucht eine Reise nach ID
-Travel *TravelAgency::findTravelById(const QString &id) const
+std::shared_ptr<Travel> TravelAgency::findTravelById(const QString &id) const
 {
-    for (Travel *t : allTravels) {
+    for (const auto &t : allTravels) {
         if (t->getId() == id)
             return t;
     }
     return nullptr;
+}
+
+void TravelAgency::loadAirports(const QString &filename)
+{
+    airports.clear();
+
+    QFile file(filename);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qWarning() << "Konnte Flughafen-Datei nicht öffnen:" << filename;
+        return;
+    }
+
+    QByteArray data = file.readAll();
+    try {
+        json j = json::parse(data.constData());
+        for (const auto &entry : j) {
+            QString code;
+            if (entry.contains("iata"))
+                code = QString::fromStdString(entry["iata"]);
+            else if (entry.contains("code"))
+                code = QString::fromStdString(entry["code"]);
+            else if (entry.contains("iata_code"))
+                code = QString::fromStdString(entry["iata_code"]);
+            else
+                continue;
+
+            QString name = entry.contains("name")
+                                ? QString::fromStdString(entry["name"])
+                                : "";
+            QString city = entry.contains("city")
+                                ? QString::fromStdString(entry["city"])
+                                : "";
+            double lat = entry.contains("latitude")
+                            ? entry["latitude"].get<double>()
+                            : (entry.contains("lat") ? entry["lat"].get<double>() : 0.0);
+            double lon = entry.contains("longitude")
+                            ? entry["longitude"].get<double>()
+                            : (entry.contains("lon") ? entry["lon"].get<double>() : 0.0);
+
+            auto ap = std::make_shared<Airport>(code, name, city, lat, lon);
+            airports.insert(code, ap);
+        }
+    } catch (const std::exception &e) {
+        qWarning() << "Fehler beim Einlesen der Flughafen-Daten:" << e.what();
+    }
 }
