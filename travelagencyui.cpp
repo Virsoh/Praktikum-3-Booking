@@ -17,6 +17,8 @@
 #include "travel.h"
 #include "ui_travelagencyui.h"
 #include <memory>
+#include <QDesktopServices>
+#include <QUrl>
 #include <QWebEngineView>
 #include "json.hpp"
 
@@ -188,21 +190,6 @@ void TravelAgencyUI::zeigeBuchungenZurReise(std::shared_ptr<Travel> reise)
         else if (dynamic_cast<TrainTicket *>(b))
             icon = QIcon(":/icons/icons/zug.png");
 
-        else if (dynamic_cast<HotelBooking *>(b))
-            icon = QIcon(":/icons/icons/hotel.png");
-        else if (dynamic_cast<RentalCarReservation *>(b))
-            icon = QIcon(":/icons/icons/auto.png");
-        else if (dynamic_cast<TrainTicket *>(b))
-            icon = QIcon(":/icons/icons/zug.png");
-        else if (dynamic_cast<FlightBooking *>(b))
-            icon = QIcon(":/icons/flug.png");
-        else if (dynamic_cast<HotelBooking *>(b))
-            icon = QIcon(":/icons/hotel.png");
-        else if (dynamic_cast<RentalCarReservation *>(b))
-            icon = QIcon(":/icons/auto.png");
-        else if (dynamic_cast<TrainTicket *>(b))
-            icon = QIcon(":/icons/zug.png");
-
 
 
         QTableWidgetItem *iconItem = new QTableWidgetItem;
@@ -328,7 +315,11 @@ void TravelAgencyUI::on_actionSpeichernTriggered()
 
 void TravelAgencyUI::updateMapForTravel(std::shared_ptr<Travel> travel)
 {
+
+    if (!travel)
+
     if (!travel || !ui->webViewMap)
+
         return;
 
     using json = nlohmann::json;
@@ -391,6 +382,12 @@ void TravelAgencyUI::updateMapForTravel(std::shared_ptr<Travel> travel)
 
     QString geoJson = QString::fromStdString(featureCollection.dump());
 
+
+    QString encoded = QUrl::toPercentEncoding(geoJson);
+    QUrl url(QStringLiteral("https://geojson.io/#data=data:application/json,%1")
+                 .arg(QString::fromLatin1(encoded)));
+    QDesktopServices::openUrl(url);
+
     QString html = R"(<html>
         <head>
             <meta charset='utf-8'>
@@ -412,4 +409,5 @@ void TravelAgencyUI::updateMapForTravel(std::shared_ptr<Travel> travel)
 
     html.replace("GEOJSON", geoJson);
     ui->webViewMap->setHtml(html);
+
 }

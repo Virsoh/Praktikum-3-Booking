@@ -11,7 +11,6 @@
 #include "trainticket.h"
 #include "airport.h"
 #include <memory>
-
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -160,6 +159,7 @@ void TravelAgency::readFile(const std::string &filename)
                                                         fromLon,
                                                         toLat,
                                                         toLon);
+
                 booking = new FlightBooking(bookingId,
                                             price,
                                             fromDate,
@@ -172,6 +172,7 @@ void TravelAgency::readFile(const std::string &filename)
                                             fromLon,
                                             toLat,
                                             toLon);
+
 
 
             } else if (type == "Hotel") {
@@ -193,7 +194,9 @@ void TravelAgency::readFile(const std::string &filename)
                                                         lat,
                                                         lon);
 
+
                 booking = new HotelBooking(bookingId, price, fromDate, toDate, hotel, town, roomType, lat, lon);
+
 
 
             } else if (type == "Rental" || type == "RentalCar") {
@@ -225,6 +228,7 @@ void TravelAgency::readFile(const std::string &filename)
                                                                returnLat,
                                                                returnLon);
 
+
                 booking = new RentalCarReservation(bookingId,
                                                    price,
                                                    fromDate,
@@ -237,6 +241,7 @@ void TravelAgency::readFile(const std::string &filename)
                                                    pickupLon,
                                                    returnLat,
                                                    returnLon);
+
 
 
             } else if (type == "Train") {
@@ -281,6 +286,7 @@ void TravelAgency::readFile(const std::string &filename)
                                                       fromLon,
                                                       toLat,
                                                       toLon);
+
 
                 booking = new TrainTicket(bookingId,
                                           price,

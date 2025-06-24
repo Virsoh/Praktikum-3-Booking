@@ -4,9 +4,8 @@
 #include <QDialog>
 #include "booking.h"
 #include "travelagency.h"
-
 #include <memory>
-
+#include <memory>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -20,7 +19,6 @@ class BookingDetailDialog : public QDialog
 
 public:
     explicit BookingDetailDialog(std::shared_ptr<TravelAgency> agency, QWidget *parent = nullptr);
-
     explicit BookingDetailDialog(TravelAgency *agency, QWidget *parent = nullptr);
 
     ~BookingDetailDialog();
