@@ -568,15 +568,10 @@ void TravelAgencyUI::showBookingMap(const Booking *booking)
 
     QString geoJsonStr = QString::fromStdString(featureCollection.dump());
 
-    QString basePath = QDir::currentPath();
-    QFile geoFile(basePath + "/map.geojson");
-    if (geoFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        QTextStream out(&geoFile);
-        out << geoJsonStr;
-        geoFile.close();
-    }
-
-    QDesktopServices::openUrl(QUrl::fromLocalFile(basePath + "/map.html"));
+    QUrl url = QUrl::fromLocalFile(QCoreApplication::applicationDirPath() +
+                                   "/map.html");
+    url.setQuery("data=" + QUrl::toPercentEncoding(geoJsonStr));
+    QDesktopServices::openUrl(url);
 }
 
 void TravelAgencyUI::onBookingsChanged()
