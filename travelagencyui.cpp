@@ -539,12 +539,34 @@ void TravelAgencyUI::showBookingMap(const Booking *booking)
         return;
 
     using json = nlohmann::json;
-    json line = {
+    json featureCollection;
+    featureCollection["type"] = "FeatureCollection";
+    featureCollection["features"] = json::array();
+
+    json lineFeature;
+    lineFeature["type"] = "Feature";
+    lineFeature["geometry"] = {
         {"type", "LineString"},
         {"coordinates", {{fromLon, fromLat}, {toLon, toLat}}}
     };
+    lineFeature["properties"] = json::object();
+    featureCollection["features"].push_back(lineFeature);
 
-    QString geoJsonStr = QString::fromStdString(line.dump());
+    json startPt = {
+        {"type", "Feature"},
+        {"geometry", {{"type", "Point"}, {"coordinates", {fromLon, fromLat}}}},
+        {"properties", {{"name", "Start"}}}
+    };
+    featureCollection["features"].push_back(startPt);
+
+    json endPt = {
+        {"type", "Feature"},
+        {"geometry", {{"type", "Point"}, {"coordinates", {toLon, toLat}}}},
+        {"properties", {{"name", "Ziel"}}}
+    };
+    featureCollection["features"].push_back(endPt);
+
+    QString geoJsonStr = QString::fromStdString(featureCollection.dump());
 
     QString basePath = QDir::currentPath();
     QFile geoFile(basePath + "/map.geojson");
