@@ -436,10 +436,19 @@ void TravelAgencyUI::updateMapForTravel(std::shared_ptr<Travel> travel)
 
     QString geoJson = QString::fromStdString(featureCollection.dump());
 
-    QUrl url = QUrl::fromLocalFile(QCoreApplication::applicationDirPath() +
-                                   "/map.html");
-    url.setQuery("data=" + QUrl::toPercentEncoding(geoJson));
-    QDesktopServices::openUrl(url);
+    QString path = QCoreApplication::applicationDirPath() + "/map.geojson";
+    QFile file(path);
+    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        file.write(geoJson.toUtf8());
+        file.close();
+    }
+
+    if (QFile::exists(path) && featureCollection["features"].size() > 0) {
+        QUrl url =
+            QUrl::fromLocalFile(QCoreApplication::applicationDirPath() +
+                               "/map.html");
+        QDesktopServices::openUrl(url);
+    }
 
 
 }
@@ -497,10 +506,19 @@ void TravelAgencyUI::updateMapForBooking(std::shared_ptr<Booking> booking)
 
     QString geoJson = QString::fromStdString(featureCollection.dump());
 
-    QUrl url = QUrl::fromLocalFile(QCoreApplication::applicationDirPath() +
-                                   "/map.html");
-    url.setQuery("data=" + QUrl::toPercentEncoding(geoJson));
-    QDesktopServices::openUrl(url);
+    QString path = QCoreApplication::applicationDirPath() + "/map.geojson";
+    QFile file(path);
+    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        file.write(geoJson.toUtf8());
+        file.close();
+    }
+
+    if (QFile::exists(path) && featureCollection["features"].size() > 0) {
+        QUrl url =
+            QUrl::fromLocalFile(QCoreApplication::applicationDirPath() +
+                               "/map.html");
+        QDesktopServices::openUrl(url);
+    }
 }
 
 void TravelAgencyUI::showBookingMap(const Booking *booking)
@@ -568,10 +586,19 @@ void TravelAgencyUI::showBookingMap(const Booking *booking)
 
     QString geoJsonStr = QString::fromStdString(featureCollection.dump());
 
-    QUrl url = QUrl::fromLocalFile(QCoreApplication::applicationDirPath() +
-                                   "/map.html");
-    url.setQuery("data=" + QUrl::toPercentEncoding(geoJsonStr));
-    QDesktopServices::openUrl(url);
+    QString path = QCoreApplication::applicationDirPath() + "/map.geojson";
+    QFile file(path);
+    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        file.write(geoJsonStr.toUtf8());
+        file.close();
+    }
+
+    if (QFile::exists(path) && featureCollection["features"].size() > 0) {
+        QUrl url =
+            QUrl::fromLocalFile(QCoreApplication::applicationDirPath() +
+                               "/map.html");
+        QDesktopServices::openUrl(url);
+    }
 }
 
 void TravelAgencyUI::onBookingsChanged()
