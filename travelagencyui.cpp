@@ -19,6 +19,9 @@
 #include <QDesktopServices>
 #include <QUrl>
 #include <QCoreApplication>
+#include <QDir>
+#include <QFile>
+#include <QTextStream>
 #include "json.hpp"
 
 // Hauptfenster einrichten
@@ -503,55 +506,83 @@ void TravelAgencyUI::showBookingMap(const Booking *booking)
     if (!booking)
         return;
 
-    using json = nlohmann::json;
-    json featureCollection;
-    featureCollection["type"] = "FeatureCollection";
-    featureCollection["features"] = json::array();
+    double fromLat = 0.0, fromLon = 0.0, toLat = 0.0, toLon = 0.0;
+    bool hasCoords = false;
 
     if (auto f = dynamic_cast<const FlightBooking *>(booking)) {
-        json feat;
-        feat["type"] = "Feature";
-        feat["geometry"] = { {"type", "LineString"},
-                              {"coordinates",
-                               {{f->getFromLongitude(), f->getFromLatitude()},
-                                {f->getToLongitude(), f->getToLatitude()}}} };
-        featureCollection["features"].push_back(feat);
+        fromLat = f->getFromLatitude();
+        fromLon = f->getFromLongitude();
+        toLat = f->getToLatitude();
+        toLon = f->getToLongitude();
+        hasCoords = true;
     } else if (auto t = dynamic_cast<const TrainTicket *>(booking)) {
-        json feat;
-        feat["type"] = "Feature";
-        feat["geometry"] = { {"type", "LineString"},
-                              {"coordinates",
-                               {{t->getFromLongitude(), t->getFromLatitude()},
-                                {t->getToLongitude(), t->getToLatitude()}}} };
-        featureCollection["features"].push_back(feat);
-    } else if (auto h = dynamic_cast<const HotelBooking *>(booking)) {
-        json feat;
-        feat["type"] = "Feature";
-        feat["geometry"]
-            = { {"type", "Point"},
-                {"coordinates", {h->getLongitude(), h->getLatitude()}} };
-        featureCollection["features"].push_back(feat);
+        fromLat = t->getFromLatitude();
+        fromLon = t->getFromLongitude();
+        toLat = t->getToLatitude();
+        toLon = t->getToLongitude();
+        hasCoords = true;
     } else if (auto r = dynamic_cast<const RentalCarReservation *>(booking)) {
-        json pick;
-        pick["type"] = "Feature";
-        pick["geometry"] = { {"type", "Point"},
-                              {"coordinates",
-                               {r->getPickupLongitude(), r->getPickupLatitude()}} };
-        featureCollection["features"].push_back(pick);
-        json retF;
-        retF["type"] = "Feature";
-        retF["geometry"] = { {"type", "Point"},
-                              {"coordinates",
-                               {r->getReturnLongitude(), r->getReturnLatitude()}} };
-        featureCollection["features"].push_back(retF);
+        fromLat = r->getPickupLatitude();
+        fromLon = r->getPickupLongitude();
+        toLat = r->getReturnLatitude();
+        toLon = r->getReturnLongitude();
+        hasCoords = true;
+    } else if (auto h = dynamic_cast<const HotelBooking *>(booking)) {
+        fromLat = h->getLatitude();
+        fromLon = h->getLongitude();
+        toLat = h->getLatitude();
+        toLon = h->getLongitude();
+        hasCoords = true;
     }
 
-    QString geoJson = QString::fromStdString(featureCollection.dump());
+    if (!hasCoords)
+        return;
 
-    QUrl url = QUrl::fromLocalFile(QCoreApplication::applicationDirPath()
-                                   + "/map.html");
-    url.setQuery("data=" + QUrl::toPercentEncoding(geoJson));
-    QDesktopServices::openUrl(url);
+    using json = nlohmann::json;
+    json line = {
+        {"type", "LineString"},
+        {"coordinates", {{fromLon, fromLat}, {toLon, toLat}}}
+    };
+
+    QString geoJsonStr = QString::fromStdString(line.dump());
+
+    QString basePath = QDir::currentPath();
+    QFile geoFile(basePath + "/map.geojson");
+    if (geoFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        QTextStream out(&geoFile);
+        out << geoJsonStr;
+        geoFile.close();
+    }
+
+    QFile htmlFile(basePath + "/map.html");
+    if (htmlFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        QTextStream out(&htmlFile);
+        out << "<!DOCTYPE html>\n";
+        out << "<html>\n<head>\n";
+        out << "  <meta charset=\"utf-8\" />\n";
+        out << "  <title>Map</title>\n";
+        out << "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n";
+        out << "  <link rel=\"stylesheet\" href=\"https://unpkg.com/leaflet@1.7.1/dist/leaflet.css\" />\n";
+        out << "  <script src=\"https://unpkg.com/leaflet@1.7.1/dist/leaflet.js\"></script>\n";
+        out << "</head>\n<body>\n";
+        out << "  <div id=\"map\" style=\"width: 100%; height: 100vh;\"></div>\n";
+        out << "  <script>\n";
+        out << "    var map = L.map('map').setView([0, 0], 2);\n";
+        out << "    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {\n";
+        out << "      attribution: '© OpenStreetMap contributors'\n";
+        out << "    }).addTo(map);\n";
+        out << "    fetch(\"map.geojson\")\n";
+        out << "      .then(response => response.json())\n";
+        out << "      .then(data => {\n";
+        out << "        var geojson = L.geoJSON(data).addTo(map);\n";
+        out << "        map.fitBounds(geojson.getBounds());\n";
+        out << "      });\n";
+        out << "  </script>\n";
+        out << "</body>\n</html>\n";
+        htmlFile.close();
+    }
+
+    QDesktopServices::openUrl(QUrl::fromLocalFile(basePath + "/map.html"));
 }
 
 void TravelAgencyUI::onBookingsChanged()
