@@ -14,7 +14,7 @@ public:
     explicit Check(std::shared_ptr<TravelAgency> agency);
     bool checkTravelsDisjunct(QString &errorMsg) const;
     void performChecks() const;
-    void operator()() const { performChecks(); }
+    void operator()() const;
 };
 
 #endif // CHECK_H

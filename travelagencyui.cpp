@@ -385,7 +385,7 @@ void TravelAgencyUI::updateMapForTravel(std::shared_ptr<Travel> travel)
 
     QString encoded = QUrl::toPercentEncoding(geoJson);
     QUrl url(QStringLiteral("https://geojson.io/#data=data:application/json,%1")
-                 .arg(QString::fromLatin1(encoded)));
+                 .arg(QString::fromLatin1(encoded.toLatin1().data())));
     QDesktopServices::openUrl(url);
 
 

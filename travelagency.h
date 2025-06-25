@@ -34,7 +34,7 @@ public:
 
     void loadAirports(const QString &filename);
     const QMap<QString, std::shared_ptr<Airport>> &getAirports() const { return airports; }
-    const std::vector<std::shared_ptr<Booking>> &getBookings() const { return bookings; }
+    const std::vector<std::shared_ptr<Booking>> &getBookings() const;
     QVector<std::shared_ptr<Travel>> getAllTravels() const { return allTravels; }
     QVector<std::shared_ptr<Customer>> getAllCustomers() const { return allCustomers; }
 };
