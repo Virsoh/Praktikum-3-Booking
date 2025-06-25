@@ -5,7 +5,21 @@
 <title>Map</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<style>html,body,#map{height:100%;margin:0;padding:0;}</style>
+<style>
+html,body,#map{height:100%;margin:0;padding:0;}
+.start-icon,.end-icon{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:24px;height:24px;
+  border-radius:50%;
+  color:#fff;
+  font-size:12px;
+  font-weight:bold;
+}
+.start-icon{background:#2ecc71;}
+.end-icon{background:#e74c3c;}
+</style>
 </head>
 <body>
 <div id="map"></div>
@@ -26,7 +40,19 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 function showData(geo) {
-  const layer = L.geoJSON(geo).addTo(map);
+  const startIcon = L.divIcon({className: 'start-icon', html: 'S'});
+  const endIcon = L.divIcon({className: 'end-icon', html: 'E'});
+  const layer = L.geoJSON(geo, {
+    pointToLayer: (feature, latlng) => {
+      if (feature.properties && feature.properties.name === 'Start') {
+        return L.marker(latlng, {icon: startIcon});
+      }
+      if (feature.properties && feature.properties.name === 'Ziel') {
+        return L.marker(latlng, {icon: endIcon});
+      }
+      return L.marker(latlng);
+    }
+  }).addTo(map);
   if (layer.getLayers().length) {
     map.fitBounds(layer.getBounds());
   }
