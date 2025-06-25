@@ -54,6 +54,7 @@ void TravelAgency::readFile(const std::string &filename)
 
     std::set<QString> seenBookingIds;
 
+    size_t index = 0;
     for (const auto &entry : j) {
         try {
             if (!entry.contains("id") || !entry.contains("price") || !entry.contains("fromDate")
@@ -63,10 +64,12 @@ void TravelAgency::readFile(const std::string &filename)
             }
 
             // Namen können in den Dateien unterschiedlich bezeichnet sein
-            if (!entry.contains("firstName") && !entry.contains("customerFirstname"))
-                throw std::runtime_error("Fehlender Vorname.");
-            if (!entry.contains("lastName") && !entry.contains("customerLastname"))
-                throw std::runtime_error("Fehlender Nachname.");
+            if (!entry.contains("firstName") && !entry.contains("firstname")
+                && !entry.contains("customerFirstName") && !entry.contains("customerFirstname"))
+                throw std::runtime_error("Fehlender firstname.");
+            if (!entry.contains("lastName") && !entry.contains("lastname")
+                && !entry.contains("customerLastName") && !entry.contains("customerLastname"))
+                throw std::runtime_error("Fehlender lastname.");
 
             QString bookingId = QString::fromStdString(entry["id"]);
             if (seenBookingIds.find(bookingId) != seenBookingIds.end()) {
@@ -93,15 +96,23 @@ void TravelAgency::readFile(const std::string &filename)
                 customerId = QString::number(entry["customerId"].get<int>());
 
             QString firstName;
-            if (entry.contains("firstName"))
+            if (entry.contains("firstname"))
+                firstName = QString::fromStdString(entry["firstname"]);
+            else if (entry.contains("firstName"))
                 firstName = QString::fromStdString(entry["firstName"]);
-            else
+            else if (entry.contains("customerFirstName"))
+                firstName = QString::fromStdString(entry["customerFirstName"]);
+            else if (entry.contains("customerFirstname"))
                 firstName = QString::fromStdString(entry["customerFirstname"]);
 
             QString lastName;
-            if (entry.contains("lastName"))
+            if (entry.contains("lastname"))
+                lastName = QString::fromStdString(entry["lastname"]);
+            else if (entry.contains("lastName"))
                 lastName = QString::fromStdString(entry["lastName"]);
-            else
+            else if (entry.contains("customerLastName"))
+                lastName = QString::fromStdString(entry["customerLastName"]);
+            else if (entry.contains("customerLastname"))
                 lastName = QString::fromStdString(entry["customerLastname"]);
 
             // Kunde suchen oder anlegen
@@ -274,9 +285,16 @@ void TravelAgency::readFile(const std::string &filename)
             }
 
         } catch (const std::exception &e) {
-            qDebug() << "Fehler beim Einlesen:" << e.what();
+            QString errId = entry.contains("id")
+                                 ? QString::fromStdString(entry["id"].is_string()
+                                                             ? entry["id"].get<std::string>()
+                                                             : std::to_string(entry["id"].get<int>()))
+                                 : QString("Index %1").arg(index);
+            qDebug() << "Fehler beim Einlesen der Buchung" << errId << ':' << e.what();
         }
+        ++index;
     }
+    qDebug() << "Loaded bookings:" << bookings.size();
 }
 
 // Liste aller Buchungen
