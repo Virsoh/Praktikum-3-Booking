@@ -11,6 +11,7 @@
 #include "travel.h"
 #include "booking.h"
 #include "travelagency.h"
+#include <vector>
 #include "check.h"
 
 QT_BEGIN_NAMESPACE
@@ -45,8 +46,7 @@ private:
     void clearTables();
     void showCustomerInfo(std::shared_ptr<Customer> customer);
     void showTravelDetails(std::shared_ptr<Travel> travel);
-    void updateMapForTravel(std::shared_ptr<Travel> travel);
-    void updateMapForBooking(std::shared_ptr<Booking> booking);
+    void showMapForBookings(const std::vector<const Booking *> &bookings);
 
 signals:
     void bookingsChanged();
