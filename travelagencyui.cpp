@@ -228,7 +228,9 @@ void TravelAgencyUI::zeigeBuchungenZurReise(std::shared_ptr<Travel> reise)
 
     ui->customerTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
-    updateMapForTravel(reise);
+    // Die Karte soll erst beim Klick auf eine Buchung angezeigt werden
+    // (BookingDetailDialog), daher hier keine automatische Aktualisierung mehr
+    // beim Auswählen einer Reise.
 }
 
 // Detaildialog für eine Buchung öffnen
