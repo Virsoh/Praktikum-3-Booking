@@ -16,6 +16,7 @@
 #include "check.h"
 #include "ui_travelagencyui.h"
 #include <memory>
+#include <vector>
 #include <QDesktopServices>
 #include <QUrl>
 #include <QCoreApplication>
@@ -371,19 +372,19 @@ void TravelAgencyUI::on_loadIataButton_clicked()
     agency->loadAirports(filename);
 }
 
-void TravelAgencyUI::updateMapForTravel(std::shared_ptr<Travel> travel)
+
+void TravelAgencyUI::showMapForBookings(const std::vector<const Booking *> &bookings)
 {
-    if (!travel)
-        return;
-
     using json = nlohmann::json;
-
     json featureCollection;
     featureCollection["type"] = "FeatureCollection";
     featureCollection["features"] = json::array();
 
-    for (const auto &b : travel->getTravelBookings()) {
-        if (auto *f = dynamic_cast<FlightBooking *>(b.get())) {
+    for (const Booking *b : bookings) {
+        if (!b)
+            continue;
+
+        if (auto f = dynamic_cast<const FlightBooking *>(b)) {
             if (f->getFromLatitude() || f->getFromLongitude() || f->getToLatitude()
                 || f->getToLongitude()) {
                 json feat;
@@ -397,7 +398,7 @@ void TravelAgencyUI::updateMapForTravel(std::shared_ptr<Travel> travel)
                 feat["properties"] = { {"booking", "flight"} };
                 featureCollection["features"].push_back(feat);
             }
-        } else if (auto *h = dynamic_cast<HotelBooking *>(b.get())) {
+        } else if (auto h = dynamic_cast<const HotelBooking *>(b)) {
             json feat;
             feat["type"] = "Feature";
             feat["geometry"]
@@ -405,7 +406,7 @@ void TravelAgencyUI::updateMapForTravel(std::shared_ptr<Travel> travel)
                     {"coordinates", {h->getLongitude(), h->getLatitude()}} };
             feat["properties"] = { {"booking", "hotel"} };
             featureCollection["features"].push_back(feat);
-        } else if (auto *r = dynamic_cast<RentalCarReservation *>(b.get())) {
+        } else if (auto r = dynamic_cast<const RentalCarReservation *>(b)) {
             json pick;
             pick["type"] = "Feature";
             pick["geometry"] = { {"type", "Point"},
@@ -420,7 +421,7 @@ void TravelAgencyUI::updateMapForTravel(std::shared_ptr<Travel> travel)
                                    {r->getReturnLongitude(), r->getReturnLatitude()}} };
             retF["properties"] = { {"booking", "rental"}, {"role", "return"} };
             featureCollection["features"].push_back(retF);
-        } else if (auto *t = dynamic_cast<TrainTicket *>(b.get())) {
+        } else if (auto t = dynamic_cast<const TrainTicket *>(b)) {
             json feat;
             feat["type"] = "Feature";
             feat["geometry"] = {
@@ -449,76 +450,6 @@ void TravelAgencyUI::updateMapForTravel(std::shared_ptr<Travel> travel)
                                "/map.html");
         QDesktopServices::openUrl(url);
     }
-
-
-}
-
-void TravelAgencyUI::updateMapForBooking(std::shared_ptr<Booking> booking)
-{
-    if (!booking)
-        return;
-
-    using json = nlohmann::json;
-    json featureCollection;
-    featureCollection["type"] = "FeatureCollection";
-    featureCollection["features"] = json::array();
-
-    if (auto *f = dynamic_cast<FlightBooking *>(booking.get())) {
-        json feat;
-        feat["type"] = "Feature";
-        feat["geometry"] = {
-            {"type", "LineString"},
-            {"coordinates",
-             {{f->getFromLongitude(), f->getFromLatitude()},
-              {f->getToLongitude(), f->getToLatitude()}}}
-        };
-        featureCollection["features"].push_back(feat);
-    } else if (auto *t = dynamic_cast<TrainTicket *>(booking.get())) {
-        json feat;
-        feat["type"] = "Feature";
-        feat["geometry"] = {
-            {"type", "LineString"},
-            {"coordinates",
-             {{t->getFromLongitude(), t->getFromLatitude()},
-              {t->getToLongitude(), t->getToLatitude()}}}
-        };
-        featureCollection["features"].push_back(feat);
-    } else if (auto *h = dynamic_cast<HotelBooking *>(booking.get())) {
-        json feat;
-        feat["type"] = "Feature";
-        feat["geometry"] = { {"type", "Point"},
-                             {"coordinates", {h->getLongitude(), h->getLatitude()}} };
-        featureCollection["features"].push_back(feat);
-    } else if (auto *r = dynamic_cast<RentalCarReservation *>(booking.get())) {
-        json pick;
-        pick["type"] = "Feature";
-        pick["geometry"] = { {"type", "Point"},
-                              {"coordinates",
-                               {r->getPickupLongitude(), r->getPickupLatitude()}} };
-        featureCollection["features"].push_back(pick);
-        json retF;
-        retF["type"] = "Feature";
-        retF["geometry"] = { {"type", "Point"},
-                              {"coordinates",
-                               {r->getReturnLongitude(), r->getReturnLatitude()}} };
-        featureCollection["features"].push_back(retF);
-    }
-
-    QString geoJson = QString::fromStdString(featureCollection.dump());
-
-    QString path = QCoreApplication::applicationDirPath() + "/map.geojson";
-    QFile file(path);
-    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        file.write(geoJson.toUtf8());
-        file.close();
-    }
-
-    if (QFile::exists(path) && featureCollection["features"].size() > 0) {
-        QUrl url =
-            QUrl::fromLocalFile(QCoreApplication::applicationDirPath() +
-                               "/map.html");
-        QDesktopServices::openUrl(url);
-    }
 }
 
 void TravelAgencyUI::showBookingMap(const Booking *booking)
@@ -526,79 +457,8 @@ void TravelAgencyUI::showBookingMap(const Booking *booking)
     if (!booking)
         return;
 
-    double fromLat = 0.0, fromLon = 0.0, toLat = 0.0, toLon = 0.0;
-    bool hasCoords = false;
-
-    if (auto f = dynamic_cast<const FlightBooking *>(booking)) {
-        fromLat = f->getFromLatitude();
-        fromLon = f->getFromLongitude();
-        toLat = f->getToLatitude();
-        toLon = f->getToLongitude();
-        hasCoords = true;
-    } else if (auto t = dynamic_cast<const TrainTicket *>(booking)) {
-        fromLat = t->getFromLatitude();
-        fromLon = t->getFromLongitude();
-        toLat = t->getToLatitude();
-        toLon = t->getToLongitude();
-        hasCoords = true;
-    } else if (auto r = dynamic_cast<const RentalCarReservation *>(booking)) {
-        fromLat = r->getPickupLatitude();
-        fromLon = r->getPickupLongitude();
-        toLat = r->getReturnLatitude();
-        toLon = r->getReturnLongitude();
-        hasCoords = true;
-    } else if (auto h = dynamic_cast<const HotelBooking *>(booking)) {
-        fromLat = h->getLatitude();
-        fromLon = h->getLongitude();
-        toLat = h->getLatitude();
-        toLon = h->getLongitude();
-        hasCoords = true;
-    }
-
-    if (!hasCoords)
-        return;
-
-    using json = nlohmann::json;
-    json featureCollection;
-    featureCollection["type"] = "FeatureCollection";
-    featureCollection["features"] = json::array();
-
-    json lineFeature;
-    lineFeature["type"] = "Feature";
-    lineFeature["geometry"] = { {"type", "LineString"},
-                                 {"coordinates", {{fromLon, fromLat}, {toLon, toLat}}} };
-    lineFeature["properties"] = json::object();
-    featureCollection["features"].push_back(lineFeature);
-
-    json startFeature;
-    startFeature["type"] = "Feature";
-    startFeature["geometry"] = { {"type", "Point"},
-                                 {"coordinates", {fromLon, fromLat}} };
-    startFeature["properties"] = { {"name", "Start"} };
-    featureCollection["features"].push_back(startFeature);
-
-    json endFeature;
-    endFeature["type"] = "Feature";
-    endFeature["geometry"] = { {"type", "Point"},
-                               {"coordinates", {toLon, toLat}} };
-    endFeature["properties"] = { {"name", "Ziel"} };
-    featureCollection["features"].push_back(endFeature);
-
-    QString geoJsonStr = QString::fromStdString(featureCollection.dump());
-
-    QString path = QCoreApplication::applicationDirPath() + "/map.geojson";
-    QFile file(path);
-    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        file.write(geoJsonStr.toUtf8());
-        file.close();
-    }
-
-    if (QFile::exists(path) && featureCollection["features"].size() > 0) {
-        QUrl url =
-            QUrl::fromLocalFile(QCoreApplication::applicationDirPath() +
-                               "/map.html");
-        QDesktopServices::openUrl(url);
-    }
+    std::vector<const Booking *> list = {booking};
+    showMapForBookings(list);
 }
 
 void TravelAgencyUI::onBookingsChanged()
