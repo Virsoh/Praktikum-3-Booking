@@ -244,8 +244,6 @@ void TravelAgencyUI::onCustomerTableDoubleClicked(QTableWidgetItem *item)
     if (!booking)
         return;
 
-    updateMapForBooking(booking);
-
     BookingDetailDialog dlg(agency, this);
     dlg.setBooking(booking);
     if (dlg.exec() == QDialog::Accepted) {
@@ -496,6 +494,62 @@ void TravelAgencyUI::updateMapForBooking(std::shared_ptr<Booking> booking)
 
     QUrl url = QUrl::fromLocalFile(QCoreApplication::applicationDirPath() +
                                    "/map.html");
+    url.setQuery("data=" + QUrl::toPercentEncoding(geoJson));
+    QDesktopServices::openUrl(url);
+}
+
+void TravelAgencyUI::showBookingMap(const Booking *booking)
+{
+    if (!booking)
+        return;
+
+    using json = nlohmann::json;
+    json featureCollection;
+    featureCollection["type"] = "FeatureCollection";
+    featureCollection["features"] = json::array();
+
+    if (auto f = dynamic_cast<const FlightBooking *>(booking)) {
+        json feat;
+        feat["type"] = "Feature";
+        feat["geometry"] = { {"type", "LineString"},
+                              {"coordinates",
+                               {{f->getFromLongitude(), f->getFromLatitude()},
+                                {f->getToLongitude(), f->getToLatitude()}}} };
+        featureCollection["features"].push_back(feat);
+    } else if (auto t = dynamic_cast<const TrainTicket *>(booking)) {
+        json feat;
+        feat["type"] = "Feature";
+        feat["geometry"] = { {"type", "LineString"},
+                              {"coordinates",
+                               {{t->getFromLongitude(), t->getFromLatitude()},
+                                {t->getToLongitude(), t->getToLatitude()}}} };
+        featureCollection["features"].push_back(feat);
+    } else if (auto h = dynamic_cast<const HotelBooking *>(booking)) {
+        json feat;
+        feat["type"] = "Feature";
+        feat["geometry"]
+            = { {"type", "Point"},
+                {"coordinates", {h->getLongitude(), h->getLatitude()}} };
+        featureCollection["features"].push_back(feat);
+    } else if (auto r = dynamic_cast<const RentalCarReservation *>(booking)) {
+        json pick;
+        pick["type"] = "Feature";
+        pick["geometry"] = { {"type", "Point"},
+                              {"coordinates",
+                               {r->getPickupLongitude(), r->getPickupLatitude()}} };
+        featureCollection["features"].push_back(pick);
+        json retF;
+        retF["type"] = "Feature";
+        retF["geometry"] = { {"type", "Point"},
+                              {"coordinates",
+                               {r->getReturnLongitude(), r->getReturnLatitude()}} };
+        featureCollection["features"].push_back(retF);
+    }
+
+    QString geoJson = QString::fromStdString(featureCollection.dump());
+
+    QUrl url = QUrl::fromLocalFile(QCoreApplication::applicationDirPath()
+                                   + "/map.html");
     url.setQuery("data=" + QUrl::toPercentEncoding(geoJson));
     QDesktopServices::openUrl(url);
 }

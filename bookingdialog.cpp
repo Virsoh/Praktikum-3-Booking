@@ -4,6 +4,7 @@
 #include "rentalcarreservation.h"
 #include "trainticket.h"
 #include "travelagency.h"
+#include "travelagencyui.h"
 #include "ui_bookingdialog.h"
 #include <memory>
 
@@ -151,6 +152,9 @@ void BookingDetailDialog::setBooking(std::shared_ptr<Booking> booking)
         ui->listWidgetDetails->clear();
         ui->listWidgetDetails->addItem("Firma: " + car->getCompany());
     }
+
+    if (auto parentUi = qobject_cast<TravelAgencyUI *>(parent()))
+        parentUi->showBookingMap(booking.get());
 }
 
 void BookingDetailDialog::onFieldModified()

@@ -32,6 +32,7 @@ public:
     bool showCustomerIdDialog(QString &idOut);
     void zeigeReisenDesKunden(std::shared_ptr<Customer> kunde);
     void zeigeBuchungenZurReise(std::shared_ptr<Travel> reise);
+    void showBookingMap(const Booking *booking);
 
 private:
     Ui::TravelAgencyUI *ui;
