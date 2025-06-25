@@ -539,12 +539,32 @@ void TravelAgencyUI::showBookingMap(const Booking *booking)
         return;
 
     using json = nlohmann::json;
-    json line = {
-        {"type", "LineString"},
-        {"coordinates", {{fromLon, fromLat}, {toLon, toLat}}}
-    };
+    json featureCollection;
+    featureCollection["type"] = "FeatureCollection";
+    featureCollection["features"] = json::array();
 
-    QString geoJsonStr = QString::fromStdString(line.dump());
+    json lineFeature;
+    lineFeature["type"] = "Feature";
+    lineFeature["geometry"] = { {"type", "LineString"},
+                                 {"coordinates", {{fromLon, fromLat}, {toLon, toLat}}} };
+    lineFeature["properties"] = json::object();
+    featureCollection["features"].push_back(lineFeature);
+
+    json startFeature;
+    startFeature["type"] = "Feature";
+    startFeature["geometry"] = { {"type", "Point"},
+                                 {"coordinates", {fromLon, fromLat}} };
+    startFeature["properties"] = { {"name", "Start"} };
+    featureCollection["features"].push_back(startFeature);
+
+    json endFeature;
+    endFeature["type"] = "Feature";
+    endFeature["geometry"] = { {"type", "Point"},
+                               {"coordinates", {toLon, toLat}} };
+    endFeature["properties"] = { {"name", "Ziel"} };
+    featureCollection["features"].push_back(endFeature);
+
+    QString geoJsonStr = QString::fromStdString(featureCollection.dump());
 
     QString basePath = QDir::currentPath();
     QFile geoFile(basePath + "/map.geojson");
@@ -552,34 +572,6 @@ void TravelAgencyUI::showBookingMap(const Booking *booking)
         QTextStream out(&geoFile);
         out << geoJsonStr;
         geoFile.close();
-    }
-
-    QFile htmlFile(basePath + "/map.html");
-    if (htmlFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        QTextStream out(&htmlFile);
-        out << "<!DOCTYPE html>\n";
-        out << "<html>\n<head>\n";
-        out << "  <meta charset=\"utf-8\" />\n";
-        out << "  <title>Map</title>\n";
-        out << "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n";
-        out << "  <link rel=\"stylesheet\" href=\"https://unpkg.com/leaflet@1.7.1/dist/leaflet.css\" />\n";
-        out << "  <script src=\"https://unpkg.com/leaflet@1.7.1/dist/leaflet.js\"></script>\n";
-        out << "</head>\n<body>\n";
-        out << "  <div id=\"map\" style=\"width: 100%; height: 100vh;\"></div>\n";
-        out << "  <script>\n";
-        out << "    var map = L.map('map').setView([0, 0], 2);\n";
-        out << "    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {\n";
-        out << "      attribution: '© OpenStreetMap contributors'\n";
-        out << "    }).addTo(map);\n";
-        out << "    fetch(\"map.geojson\")\n";
-        out << "      .then(response => response.json())\n";
-        out << "      .then(data => {\n";
-        out << "        var geojson = L.geoJSON(data).addTo(map);\n";
-        out << "        map.fitBounds(geojson.getBounds());\n";
-        out << "      });\n";
-        out << "  </script>\n";
-        out << "</body>\n</html>\n";
-        htmlFile.close();
     }
 
     QDesktopServices::openUrl(QUrl::fromLocalFile(basePath + "/map.html"));
