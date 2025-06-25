@@ -1,11 +1,8 @@
 #include "travelagencyui.h"
-#include <QDebug>
 #include <QFileDialog>
 #include <QFormLayout>
-#include <QInputDialog>
 #include <QLineEdit>
 #include <QMessageBox>
-#include <QPushButton>
 #include <QIcon>
 #include <QTableWidgetItem>
 #include "bookingdialog.h"
@@ -20,6 +17,7 @@
 #include <memory>
 #include <QDesktopServices>
 #include <QUrl>
+#include <QCoreApplication>
 #include "json.hpp"
 
 // Hauptfenster einrichten
@@ -34,6 +32,19 @@ TravelAgencyUI::TravelAgencyUI(std::shared_ptr<TravelAgency> agency,
 {
     ui->setupUi(this);
     setupUI();
+
+    agency->loadAirports("data/iatacodes.json");
+    try {
+        agency->readFile("data/bookingsPraktikum4.json");
+        if (checker)
+            checker->performChecks();
+        QMessageBox::information(this,
+                                 "Daten geladen",
+                                 QString("%1 Buchungen geladen.")
+                                     .arg(agency->getBookings().size()));
+    } catch (const std::exception &e) {
+        QMessageBox::critical(this, "Fehler", QString::fromStdString(e.what()));
+    }
 
     connect(ui->actionDateiOeffnen,
             &QAction::triggered,
@@ -78,7 +89,7 @@ void TravelAgencyUI::on_actionDateiOeffnenClicked()
         return;
 
     agency->reset();
-    agency->loadAirports("iatacodes.json");
+    agency->loadAirports("data/iatacodes.json");
 
     try {
         agency->readFile(filename.toStdString());
@@ -235,6 +246,8 @@ void TravelAgencyUI::onCustomerTableDoubleClicked(QTableWidgetItem *item)
     if (!booking)
         return;
 
+    updateMapForBooking(booking);
+
     BookingDetailDialog dlg(agency, this);
     dlg.setBooking(booking);
     if (dlg.exec() == QDialog::Accepted) {
@@ -383,12 +396,71 @@ void TravelAgencyUI::updateMapForTravel(std::shared_ptr<Travel> travel)
 
     QString geoJson = QString::fromStdString(featureCollection.dump());
 
-    QString encoded = QUrl::toPercentEncoding(geoJson);
-    QUrl url(QStringLiteral("https://geojson.io/#data=data:application/json,%1")
-                 .arg(QString::fromLatin1(encoded.toLatin1().data())));
+    QUrl url = QUrl::fromLocalFile(QCoreApplication::applicationDirPath() +
+                                   "/map.html");
+    url.setQuery("data=" + QUrl::toPercentEncoding(geoJson));
     QDesktopServices::openUrl(url);
 
 
+}
+
+void TravelAgencyUI::updateMapForBooking(std::shared_ptr<Booking> booking)
+{
+    if (!booking)
+        return;
+
+    using json = nlohmann::json;
+    json featureCollection;
+    featureCollection["type"] = "FeatureCollection";
+    featureCollection["features"] = json::array();
+
+    if (auto *f = dynamic_cast<FlightBooking *>(booking.get())) {
+        json feat;
+        feat["type"] = "Feature";
+        feat["geometry"] = {
+            {"type", "LineString"},
+            {"coordinates",
+             {{f->getFromLongitude(), f->getFromLatitude()},
+              {f->getToLongitude(), f->getToLatitude()}}}
+        };
+        featureCollection["features"].push_back(feat);
+    } else if (auto *t = dynamic_cast<TrainTicket *>(booking.get())) {
+        json feat;
+        feat["type"] = "Feature";
+        feat["geometry"] = {
+            {"type", "LineString"},
+            {"coordinates",
+             {{t->getFromLongitude(), t->getFromLatitude()},
+              {t->getToLongitude(), t->getToLatitude()}}}
+        };
+        featureCollection["features"].push_back(feat);
+    } else if (auto *h = dynamic_cast<HotelBooking *>(booking.get())) {
+        json feat;
+        feat["type"] = "Feature";
+        feat["geometry"] = { {"type", "Point"},
+                             {"coordinates", {h->getLongitude(), h->getLatitude()}} };
+        featureCollection["features"].push_back(feat);
+    } else if (auto *r = dynamic_cast<RentalCarReservation *>(booking.get())) {
+        json pick;
+        pick["type"] = "Feature";
+        pick["geometry"] = { {"type", "Point"},
+                              {"coordinates",
+                               {r->getPickupLongitude(), r->getPickupLatitude()}} };
+        featureCollection["features"].push_back(pick);
+        json retF;
+        retF["type"] = "Feature";
+        retF["geometry"] = { {"type", "Point"},
+                              {"coordinates",
+                               {r->getReturnLongitude(), r->getReturnLatitude()}} };
+        featureCollection["features"].push_back(retF);
+    }
+
+    QString geoJson = QString::fromStdString(featureCollection.dump());
+
+    QUrl url = QUrl::fromLocalFile(QCoreApplication::applicationDirPath() +
+                                   "/map.html");
+    url.setQuery("data=" + QUrl::toPercentEncoding(geoJson));
+    QDesktopServices::openUrl(url);
 }
 
 void TravelAgencyUI::onBookingsChanged()

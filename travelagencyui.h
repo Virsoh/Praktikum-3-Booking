@@ -1,28 +1,15 @@
 #ifndef TRAVELAGENCYUI_H
 #define TRAVELAGENCYUI_H
 
-#include <QAbstractButton>
-#include <QAction>
-#include <QDialog>
-#include <QDialogButtonBox>
-#include <QFileDialog>
-#include <QFormLayout>
-#include <QHBoxLayout>
-#include <QHeaderView>
-#include <QLabel>
-#include <QLineEdit>
 #include <QMainWindow>
-#include <QMenuBar>
-#include <QMessageBox>
-#include <QStatusBar>
 #include <QTableWidget>
 #include <QTableWidgetItem>
-#include <QToolBar>
-#include <QVBoxLayout>
+#include <QString>
 #include <memory>
 
 #include "customer.h"
 #include "travel.h"
+#include "booking.h"
 #include "travelagency.h"
 #include "check.h"
 
@@ -58,6 +45,7 @@ private:
     void showCustomerInfo(std::shared_ptr<Customer> customer);
     void showTravelDetails(std::shared_ptr<Travel> travel);
     void updateMapForTravel(std::shared_ptr<Travel> travel);
+    void updateMapForBooking(std::shared_ptr<Booking> booking);
 
 signals:
     void bookingsChanged();
