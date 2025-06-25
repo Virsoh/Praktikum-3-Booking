@@ -34,19 +34,6 @@ TravelAgencyUI::TravelAgencyUI(std::shared_ptr<TravelAgency> agency,
     ui->setupUi(this);
     setupUI();
 
-    agency->loadAirports("data/iatacodes.json");
-    try {
-        agency->readFile("data/bookingsPraktikum4.json");
-        if (checker)
-            checker->performChecks();
-        QMessageBox::information(this,
-                                 "Daten geladen",
-                                 QString("%1 Buchungen geladen.")
-                                     .arg(agency->getBookings().size()));
-    } catch (const std::exception &e) {
-        QMessageBox::critical(this, "Fehler", QString::fromStdString(e.what()));
-    }
-
     connect(ui->actionDateiOeffnen,
             &QAction::triggered,
             this,
@@ -74,6 +61,16 @@ TravelAgencyUI::TravelAgencyUI(std::shared_ptr<TravelAgency> agency,
             &TravelAgencyUI::onCustomerTableDoubleClicked);
 
     connect(this, &TravelAgencyUI::bookingsChanged, this, &TravelAgencyUI::onBookingsChanged);
+
+    connect(ui->loadBookingsButton,
+            &QPushButton::clicked,
+            this,
+            &TravelAgencyUI::on_loadBookingsButton_clicked);
+
+    connect(ui->loadIataButton,
+            &QPushButton::clicked,
+            this,
+            &TravelAgencyUI::on_loadIataButton_clicked);
 }
 
 
@@ -330,6 +327,45 @@ void TravelAgencyUI::on_actionSpeichernTriggered()
     } catch (const std::exception &e) {
         QMessageBox::critical(this, "Fehler", QString::fromStdString(e.what()));
     }
+}
+
+void TravelAgencyUI::on_loadBookingsButton_clicked()
+{
+    QString filename
+        = QFileDialog::getOpenFileName(this,
+                                        tr("Buchungen laden"),
+                                        QString(),
+                                        tr("JSON (*.json);;Alle Dateien (*.*)"));
+    if (filename.isEmpty())
+        return;
+
+    try {
+        agency->readFile(filename.toStdString());
+        if (checker)
+            checker->performChecks();
+        QMessageBox::information(this,
+                                 tr("Buchungen geladen"),
+                                 tr("Es wurden %1 Buchungen erfolgreich geladen.")
+                                     .arg(agency->getBookings().size()));
+        unsavedChanges = false;
+        ui->actionSpeichern->setEnabled(false);
+        emit bookingsChanged();
+    } catch (const std::exception &e) {
+        QMessageBox::critical(this, tr("Fehler"), QString::fromStdString(e.what()));
+    }
+}
+
+void TravelAgencyUI::on_loadIataButton_clicked()
+{
+    QString filename
+        = QFileDialog::getOpenFileName(this,
+                                        tr("IATA-Codes laden"),
+                                        QString(),
+                                        tr("JSON (*.json);;Alle Dateien (*.*)"));
+    if (filename.isEmpty())
+        return;
+
+    agency->loadAirports(filename);
 }
 
 void TravelAgencyUI::updateMapForTravel(std::shared_ptr<Travel> travel)
