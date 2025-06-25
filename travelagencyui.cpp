@@ -2,6 +2,7 @@
 #include <QFileDialog>
 #include <QFormLayout>
 #include <QLineEdit>
+#include <QDialogButtonBox>
 #include <QMessageBox>
 #include <QIcon>
 #include <QTableWidgetItem>
@@ -139,10 +140,10 @@ bool TravelAgencyUI::showCustomerIdDialog(QString &idOut)
     QLineEdit *input = new QLineEdit;
     layout.addRow("ID:", input);
 
-    QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-    layout.addRow(&buttonBox);
-    connect(&buttonBox, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
-    connect(&buttonBox, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    layout.addRow(buttonBox);
+    connect(buttonBox, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    connect(buttonBox, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
 
     if (dialog.exec() == QDialog::Accepted) {
         idOut = input->text().trimmed();
