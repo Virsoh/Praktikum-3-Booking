@@ -54,6 +54,8 @@ private slots:
     void on_actionDateiOeffnenClicked();
     void on_actionEintragssucheClicked();
     void on_actionSpeichernTriggered();
+    void on_loadBookingsButton_clicked();
+    void on_loadIataButton_clicked();
     void onCustomerTableDoubleClicked(QTableWidgetItem *item);
     void onTravelTableDoubleClicked(QTableWidgetItem *item);
     void onBookingsChanged();
