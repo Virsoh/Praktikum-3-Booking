@@ -244,7 +244,7 @@ void TravelAgencyUI::onCustomerTableDoubleClicked(QTableWidgetItem *item)
     if (!booking)
         return;
 
-    updateMapForBooking(booking);
+    showBookingMap(booking.get());
 
     BookingDetailDialog dlg(agency, this);
     dlg.setBooking(booking);
@@ -497,6 +497,50 @@ void TravelAgencyUI::updateMapForBooking(std::shared_ptr<Booking> booking)
     QUrl url = QUrl::fromLocalFile(QCoreApplication::applicationDirPath() +
                                    "/map.html");
     url.setQuery("data=" + QUrl::toPercentEncoding(geoJson));
+    QDesktopServices::openUrl(url);
+}
+
+void TravelAgencyUI::showBookingMap(const Booking *booking)
+{
+    if (!booking)
+        return;
+
+    using json = nlohmann::json;
+    json featureCollection;
+    featureCollection["type"] = "FeatureCollection";
+    featureCollection["features"] = json::array();
+
+    auto addLine = [&](double lon1, double lat1, double lon2, double lat2) {
+        json feat;
+        feat["type"] = "Feature";
+        feat["geometry"] = { {"type", "LineString"},
+                             {"coordinates", {{lon1, lat1}, {lon2, lat2}}} };
+        featureCollection["features"].push_back(feat);
+    };
+
+    auto addPoint = [&](double lon, double lat) {
+        json feat;
+        feat["type"] = "Feature";
+        feat["geometry"] = { {"type", "Point"}, {"coordinates", {lon, lat}} };
+        featureCollection["features"].push_back(feat);
+    };
+
+    if (const FlightBooking *f = dynamic_cast<const FlightBooking *>(booking)) {
+        addLine(f->getFromLongitude(), f->getFromLatitude(), f->getToLongitude(), f->getToLatitude());
+    } else if (const TrainTicket *t = dynamic_cast<const TrainTicket *>(booking)) {
+        addLine(t->getFromLongitude(), t->getFromLatitude(), t->getToLongitude(), t->getToLatitude());
+    } else if (const RentalCarReservation *r = dynamic_cast<const RentalCarReservation *>(booking)) {
+        addLine(r->getPickupLongitude(), r->getPickupLatitude(), r->getReturnLongitude(), r->getReturnLatitude());
+    } else if (const HotelBooking *h = dynamic_cast<const HotelBooking *>(booking)) {
+        addPoint(h->getLongitude(), h->getLatitude());
+    } else {
+        return;
+    }
+
+    QString geoJson = QString::fromStdString(featureCollection.dump());
+
+    QUrl url = QUrl::fromLocalFile(QCoreApplication::applicationDirPath() + "/map.html");
+    url.setQuery(QStringLiteral("data=") + QUrl::toPercentEncoding(geoJson));
     QDesktopServices::openUrl(url);
 }
 

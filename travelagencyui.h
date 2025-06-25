@@ -46,6 +46,7 @@ private:
     void showTravelDetails(std::shared_ptr<Travel> travel);
     void updateMapForTravel(std::shared_ptr<Travel> travel);
     void updateMapForBooking(std::shared_ptr<Booking> booking);
+    void showBookingMap(const Booking *booking);
 
 signals:
     void bookingsChanged();
