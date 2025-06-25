@@ -47,6 +47,11 @@ function showData(geo) {
         return L.marker(latlng, {icon: endIcon});
       }
       return L.marker(latlng);
+    },
+    onEachFeature: (feature, l) => {
+      if (feature.properties && feature.properties.name) {
+        l.bindPopup(feature.properties.name);
+      }
     }
   }).addTo(map);
   if (layer.getLayers().length) {
@@ -58,7 +63,8 @@ function showData(geo) {
   }
 }
 
-fetch('map.geojson')
+const geojsonUrl = new URL('map.geojson', window.location.href);
+fetch(geojsonUrl)
   .catch(err => {
     console.error('Failed to fetch map.geojson', err);
     message.textContent = 'Failed to load map data.';
