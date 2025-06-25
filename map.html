@@ -12,14 +12,33 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const params = new URLSearchParams(window.location.search);
-let data = {};
-if(params.get('data')){
-  try{data=JSON.parse(decodeURIComponent(params.get('data')));}catch(e){}
+let data = null;
+if (params.get('data')) {
+  try {
+    data = JSON.parse(decodeURIComponent(params.get('data')));
+  } catch (e) {}
 }
-const map = L.map('map').setView([0,0],2);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19, attribution:'&copy; OpenStreetMap'}).addTo(map);
-const layer = L.geoJSON(data).addTo(map);
-if(layer.getLayers().length){map.fitBounds(layer.getBounds());}
+
+const map = L.map('map').setView([0, 0], 2);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '&copy; OpenStreetMap'
+}).addTo(map);
+
+function showData(geo) {
+  const layer = L.geoJSON(geo).addTo(map);
+  if (layer.getLayers().length) {
+    map.fitBounds(layer.getBounds());
+  }
+}
+
+if (data) {
+  showData(data);
+} else {
+  fetch('map.geojson')
+    .then(r => r.json())
+    .then(showData);
+}
 </script>
 </body>
 </html>
