@@ -387,16 +387,33 @@ void TravelAgencyUI::showMapForBookings(const std::vector<const Booking *> &book
         if (auto f = dynamic_cast<const FlightBooking *>(b)) {
             if (f->getFromLatitude() || f->getFromLongitude() || f->getToLatitude()
                 || f->getToLongitude()) {
-                json feat;
-                feat["type"] = "Feature";
-                feat["geometry"] = {
+                json line;
+                line["type"] = "Feature";
+                line["geometry"] = {
                     {"type", "LineString"},
                     {"coordinates",
                      {{f->getFromLongitude(), f->getFromLatitude()},
                       {f->getToLongitude(), f->getToLatitude()}}}
                 };
-                feat["properties"] = { {"booking", "flight"} };
-                featureCollection["features"].push_back(feat);
+                line["properties"] = { {"booking", "flight"} };
+                featureCollection["features"].push_back(line);
+
+                json start;
+                start["type"] = "Feature";
+                start["geometry"] = { {"type", "Point"},
+                                      {"coordinates",
+                                       {f->getFromLongitude(), f->getFromLatitude()}} };
+                start["properties"]
+                    = { {"booking", "flight"}, {"name", "Start"} };
+                featureCollection["features"].push_back(start);
+
+                json end;
+                end["type"] = "Feature";
+                end["geometry"] = { {"type", "Point"},
+                                    {"coordinates",
+                                     {f->getToLongitude(), f->getToLatitude()}} };
+                end["properties"] = { {"booking", "flight"}, {"name", "Ziel"} };
+                featureCollection["features"].push_back(end);
             }
         } else if (auto h = dynamic_cast<const HotelBooking *>(b)) {
             json feat;
@@ -422,16 +439,33 @@ void TravelAgencyUI::showMapForBookings(const std::vector<const Booking *> &book
             retF["properties"] = { {"booking", "rental"}, {"role", "return"} };
             featureCollection["features"].push_back(retF);
         } else if (auto t = dynamic_cast<const TrainTicket *>(b)) {
-            json feat;
-            feat["type"] = "Feature";
-            feat["geometry"] = {
+            json line;
+            line["type"] = "Feature";
+            line["geometry"] = {
                 {"type", "LineString"},
                 {"coordinates",
                  {{t->getFromLongitude(), t->getFromLatitude()},
                   {t->getToLongitude(), t->getToLatitude()}}}
             };
-            feat["properties"] = { {"booking", "train"} };
-            featureCollection["features"].push_back(feat);
+            line["properties"] = { {"booking", "train"} };
+            featureCollection["features"].push_back(line);
+
+            json start;
+            start["type"] = "Feature";
+            start["geometry"] = { {"type", "Point"},
+                                  {"coordinates",
+                                   {t->getFromLongitude(), t->getFromLatitude()}} };
+            start["properties"]
+                = { {"booking", "train"}, {"name", "Start"} };
+            featureCollection["features"].push_back(start);
+
+            json end;
+            end["type"] = "Feature";
+            end["geometry"] = { {"type", "Point"},
+                                {"coordinates",
+                                 {t->getToLongitude(), t->getToLatitude()}} };
+            end["properties"] = { {"booking", "train"}, {"name", "Ziel"} };
+            featureCollection["features"].push_back(end);
         }
     }
 
